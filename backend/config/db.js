@@ -26,9 +26,18 @@ if (USE_MONGODB) {
         if (prop === 'insert') {
           return async (doc) => {
             await ensureConnected();
+            if (Array.isArray(doc)) {
+              const inserted = await Model.insertMany(doc, { lean: true });
+              return inserted.map(d => {
+                if (!d._id) d._id = d.id;
+                return d;
+              });
+            }
             const m = new Model(doc);
             await m.save();
-            return m.toObject();
+            const obj = m.toObject();
+            if (!obj._id) obj._id = obj.id;
+            return obj;
           };
         }
         if (prop === 'findOne') {
