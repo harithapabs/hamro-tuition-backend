@@ -15,7 +15,11 @@ if (USE_MONGODB) {
     try {
       return mongoose.model(collectionName);
     } catch (e) {
-      return mongoose.model(collectionName, new mongoose.Schema({}, { strict: false, versionKey: false }), collectionName);
+      return mongoose.model(
+        collectionName,
+        new mongoose.Schema({}, { strict: false, versionKey: false, _id: false }),
+        collectionName
+      );
     }
   }
 
@@ -27,14 +31,17 @@ if (USE_MONGODB) {
         if (prop === 'insert') {
           return async (doc) => {
             await ensureConnected();
+            const newId = () => new mongoose.Types.ObjectId().toString();
             if (Array.isArray(doc)) {
-              const inserted = await Model.insertMany(doc, { lean: true });
+              const docs = doc.map((d) => ({ ...d, _id: d._id || newId() }));
+              const inserted = await Model.insertMany(docs, { lean: true });
               return inserted.map(d => {
                 if (!d._id) d._id = d.id;
                 return d;
               });
             }
-            const m = new Model(doc);
+            const docWithId = { ...doc, _id: doc._id || newId() };
+            const m = new Model(docWithId);
             await m.save();
             const obj = m.toObject();
             if (!obj._id) obj._id = obj.id;
