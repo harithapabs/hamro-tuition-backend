@@ -1,0 +1,133 @@
+const bcrypt = require('bcryptjs');
+const path = require('path');
+const fs = require('fs');
+
+const dataDir = path.join(__dirname, 'data');
+if (fs.existsSync(dataDir)) {
+  fs.readdirSync(dataDir).forEach(f => {
+    if (f.endsWith('.db')) fs.unlinkSync(path.join(dataDir, f));
+  });
+} else {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+const Datastore = require('nedb-promises');
+const db = {
+  users: Datastore.create({ filename: path.join(dataDir, 'users.db'), autoload: true }),
+  courses: Datastore.create({ filename: path.join(dataDir, 'courses.db'), autoload: true }),
+  payments: Datastore.create({ filename: path.join(dataDir, 'payments.db'), autoload: true }),
+  notices: Datastore.create({ filename: path.join(dataDir, 'notices.db'), autoload: true }),
+  quizzes: Datastore.create({ filename: path.join(dataDir, 'quizzes.db'), autoload: true }),
+};
+
+const seed = async () => {
+  try {
+    const hashedAdmin = await bcrypt.hash('admin123', 10);
+    const admin = await db.users.insert({
+      name: 'Admin', email: 'admin@hamrotuition.com', password: hashedAdmin,
+      role: 'admin', enrolledCourses: [], profilePic: '', createdAt: new Date().toISOString()
+    });
+    console.log('Admin: admin@hamrotuition.com / admin123');
+
+    const hashedStudent = await bcrypt.hash('student123', 10);
+    await db.users.insert([
+      { name: 'Ram Sharma', email: 'ram@test.com', password: hashedStudent, role: 'student', enrolledCourses: [], profilePic: '', createdAt: new Date().toISOString() },
+      { name: 'Sita Poudel', email: 'sita@test.com', password: hashedStudent, role: 'student', enrolledCourses: [], profilePic: '', createdAt: new Date().toISOString() },
+    ]);
+    console.log('Students created');
+
+    const courses = await db.courses.insert([
+      {
+        title: 'Class 10 Compulsory Mathematics', description: 'Complete maths for SEE preparation.',
+        price: 2999, thumbnail: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800',
+        instructor: 'Rajesh Hamal', category: 'School', rating: 4.8, numReviews: 124,
+        lessons: [
+          { title: 'Introduction to Algebra', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '45:00', isFree: true },
+          { title: 'Linear Equations', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '38:00', isFree: false },
+          { title: 'Quadratic Equations', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '52:00', isFree: false },
+          { title: 'Geometry & Trigonometry', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '60:00', isFree: false },
+        ],
+        createdAt: new Date().toISOString()
+      },
+      {
+        title: 'Class 11 Physics - Mechanics', description: 'Master physics for NEB.',
+        price: 3499, thumbnail: 'https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=800',
+        instructor: 'Dr. Anup Ghimire', category: 'Plus2', rating: 4.9, numReviews: 89,
+        lessons: [
+          { title: 'Physical Quantities', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '40:00', isFree: true },
+          { title: 'Kinematics', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '55:00', isFree: false },
+          { title: "Newton's Laws", videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '62:00', isFree: false },
+        ],
+        createdAt: new Date().toISOString()
+      },
+      {
+        title: 'Class 12 English Guide', description: 'Complete English for NEB board.',
+        price: 1999, thumbnail: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800',
+        instructor: 'Maya Devi Gurung', category: 'Plus2', rating: 4.7, numReviews: 156,
+        lessons: [
+          { title: 'Grammar Fundamentals', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '35:00', isFree: true },
+          { title: 'Tenses & Aspects', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '42:00', isFree: false },
+        ],
+        createdAt: new Date().toISOString()
+      },
+      {
+        title: 'Bachelor Business Studies', description: 'BBS/BBA first year complete.',
+        price: 4999, thumbnail: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800',
+        instructor: 'Prof. Krishna Bhattarai', category: 'Bachelor', rating: 4.6, numReviews: 73,
+        lessons: [
+          { title: 'Introduction to Business', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '30:00', isFree: true },
+        ],
+        createdAt: new Date().toISOString()
+      },
+      {
+        title: 'Class 8 Science', description: 'Interactive science with experiments.',
+        price: 2499, thumbnail: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800',
+        instructor: 'Santosh Thapa', category: 'School', rating: 4.5, numReviews: 98,
+        lessons: [
+          { title: 'Scientific Learning', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '25:00', isFree: true },
+          { title: 'Force & Motion', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '33:00', isFree: false },
+        ],
+        createdAt: new Date().toISOString()
+      },
+      {
+        title: 'Class 9 Computer Science', description: 'Programming & IT fundamentals.',
+        price: 2799, thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800',
+        instructor: 'Bishal Neupane', category: 'School', rating: 4.8, numReviews: 67,
+        lessons: [
+          { title: 'Computer Basics', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '28:00', isFree: true },
+          { title: 'Programming Concepts', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', notesPdf: '', duration: '40:00', isFree: false },
+        ],
+        createdAt: new Date().toISOString()
+      },
+    ]);
+    console.log(`${courses.length} courses created`);
+
+    await db.notices.insert([
+      { title: 'New Batch for Class 10 SEE 2081', content: 'Enroll now for intensive SEE prep. Classes from Sunday!', isActive: true, createdAt: new Date().toISOString() },
+      { title: 'Free Trial Classes for +2 Science', content: 'Try our premium teaching for Class 11 Science this week.', isActive: true, createdAt: new Date().toISOString() },
+    ]);
+    console.log('Notices created');
+
+    await db.quizzes.insert({
+      courseId: courses[0]._id, lessonId: courses[0].lessons[0]._id,
+      title: 'Algebra Basics Quiz',
+      questions: [
+        { question: 'What is x + 2 = 5, find x', options: ['2', '3', '5', '7'], correctAnswer: 1 },
+        { question: 'What is 2x = 10, find x', options: ['2', '5', '10', '20'], correctAnswer: 1 },
+        { question: 'Simplify: a + a + a', options: ['a', '3a', 'a³', '3'], correctAnswer: 1 },
+      ],
+      timeLimit: 10, createdAt: new Date().toISOString()
+    });
+    console.log('Quiz created');
+
+    console.log('\n\u2705 Database seeded!');
+    console.log('\uD83D\uDCE7 Admin: admin@hamrotuition.com / admin123');
+    console.log('\uD83D\uDCE7 Student: ram@test.com / student123');
+    process.exit(0);
+  } catch (err) {
+    console.error('Seed error:', err);
+    process.exit(1);
+  }
+};
+
+seed();
