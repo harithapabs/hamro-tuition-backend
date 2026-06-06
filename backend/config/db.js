@@ -1,4 +1,5 @@
 const USE_MONGODB = !!process.env.MONGODB_URI;
+const { Cursor } = require('./cursor');
 
 if (USE_MONGODB) {
   const mongoose = require('mongoose');
@@ -50,18 +51,14 @@ if (USE_MONGODB) {
           };
         }
         if (prop === 'find') {
-          return async (query = {}, options = {}) => {
+          return (query = {}) => new Cursor(async () => {
             await ensureConnected();
-            let q = Model.find(query || {});
-            if (options.sort) q = q.sort(options.sort);
-            if (options.limit) q = q.limit(options.limit);
-            if (options.skip) q = q.skip(options.skip);
-            const docs = await q.lean();
+            const docs = await Model.find(query || {}).lean();
             return docs.map(d => {
               if (!d._id) d._id = d.id;
               return d;
             });
-          };
+          });
         }
         if (prop === 'update') {
           return async (query, update) => {
