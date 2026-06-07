@@ -95,6 +95,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(require('./middleware/sanitize').noSqlSanitize);
 const compression = require('compression');
 app.use(compression({ level: 6, threshold: 512 }));
+app.set('etag', 'strong');
+app.set('x-powered-by', false);
 
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -208,6 +210,11 @@ const server = app.listen(PORT, () => console.log(`Server running on port ${PORT
 app.get('/api/health', (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json({ ok: true, ts: Date.now() });
+});
+
+app.get('/api/cache-stats', (req, res) => {
+  const { getStats } = require('./middleware/cache');
+  res.json(getStats());
 });
 
 function shutdown(signal) {

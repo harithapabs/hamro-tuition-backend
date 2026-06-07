@@ -1,8 +1,9 @@
 const express = require('express');
 const { auth } = require('../middleware/auth');
+const { cacheMiddleware, invalidateByPattern } = require('../middleware/cache');
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/', cacheMiddleware({ ttl: 120 }), async (req, res) => {
   try {
     const { category, search } = req.query;
     let query = {};

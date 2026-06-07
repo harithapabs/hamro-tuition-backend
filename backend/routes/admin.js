@@ -4,10 +4,11 @@ const router = express.Router();
 const { sendPaymentApprovedEmail } = require('../utils/email');
 const { logAction } = require('../utils/audit');
 const { computeRiskScore } = require('../utils/fraudDetection');
+const { cacheMiddleware, invalidateByPattern } = require('../middleware/cache');
 
 router.use(adminAuth);
 
-router.get('/dashboard', async (req, res) => {
+router.get('/dashboard', cacheMiddleware({ ttl: 30 }), async (req, res) => {
   try {
     const [studentsCount, coursesCount, payments, enrollments, liveSessionsList, allCourses, allReviews] = await Promise.all([
       req.db.users.count({ role: 'student' }),
@@ -68,7 +69,7 @@ router.get('/dashboard', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-router.get('/reports', async (req, res) => {
+router.get('/reports', cacheMiddleware({ ttl: 60 }), async (req, res) => {
   try {
     const [courses, payments, students, enrollments, liveSessions] = await Promise.all([
       req.db.courses.find({}),
@@ -228,7 +229,7 @@ router.post('/courses/:id/lessons', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-router.get('/students', async (req, res) => {
+router.get('/students', cacheMiddleware({ ttl: 30 }), async (req, res) => {
   try {
     const students = await req.db.users.find({ role: 'student' }).sort({ createdAt: -1 });
     const result = [];
@@ -249,7 +250,7 @@ router.patch('/students/:id/block', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-router.get('/payments', async (req, res) => {
+router.get('/payments', cacheMiddleware({ ttl: 20 }), async (req, res) => {
   try {
     const payments = await req.db.payments.find({}).sort({ createdAt: -1 });
     const result = [];
@@ -287,7 +288,7 @@ router.get('/payments', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-router.get('/payment-requests', async (req, res) => {
+router.get('/payment-requests', cacheMiddleware({ ttl: 20 }), async (req, res) => {
   try {
     const payments = await req.db.payments.find({}).sort({ createdAt: -1 });
     const result = [];

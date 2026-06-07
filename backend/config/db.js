@@ -9,6 +9,42 @@ if (USE_MONGODB) {
     if (connected) return;
     await mongoose.connect(process.env.MONGODB_URI);
     connected = true;
+    try {
+      const idx = [
+        { model: 'users', fields: [{ email: 1 }, { unique: true, sparse: true }] },
+        { model: 'users', fields: [{ role: 1 }, { createdAt: -1 }] },
+        { model: 'courses', fields: [{ category: 1 }, { createdAt: -1 }] },
+        { model: 'courses', fields: [{ createdAt: -1 }] },
+        { model: 'payments', fields: [{ status: 1 }, { createdAt: -1 }] },
+        { model: 'payments', fields: [{ userId: 1 }, { createdAt: -1 }] },
+        { model: 'enrollments', fields: [{ userId: 1 }, { status: 1 }] },
+        { model: 'enrollments', fields: [{ status: 1 }, { createdAt: -1 }] },
+        { model: 'reviews', fields: [{ courseId: 1 }, { isApproved: 1 }, { createdAt: -1 }] },
+        { model: 'reviews', fields: [{ isApproved: 1 }, { createdAt: -1 }] },
+        { model: 'liveSessions', fields: [{ createdAt: -1 }] },
+        { model: 'notices', fields: [{ createdAt: -1 }] },
+        { model: 'auditLogs', fields: [{ createdAt: -1 }] },
+        { model: 'auditLogs', fields: [{ userId: 1 }, { createdAt: -1 }] },
+      ];
+      for (const { model, fields } of idx) {
+        try {
+          const M = mongoose.model(model);
+          await M.collection.createIndex(fields.reduce((acc, f) => {
+            if (typeof f === 'object') {
+              Object.entries(f).forEach(([k, v]) => { if (k !== 'unique' && k !== 'sparse') acc[k] = v; });
+              if (f.unique) acc._unique = true;
+              if (f.sparse) acc._sparse = true;
+            } else {
+              acc[f] = 1;
+            }
+            return acc;
+          }, {}), {
+            unique: fields.some(f => typeof f === 'object' && f.unique) || false,
+            background: true,
+          });
+        } catch (e) { console.warn(`Index for ${model}:`, e.message); }
+      }
+    } catch (e) { console.warn('Index setup:', e.message); }
   }
 
   function getModel(collectionName) {
