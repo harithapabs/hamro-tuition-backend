@@ -38,11 +38,12 @@ const CourseCard = ({ course, index }) => (
   >
     <Link to={`/course/${course._id}`} className="block group">
       <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-        <div className={`h-44 bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} flex items-center justify-center relative overflow-hidden`}>
-          {course.thumbnail ? (
-            <img src={course.thumbnail} alt={course.title} className="max-h-[75%] max-w-full object-contain" />
-          ) : (
-            <span className="text-4xl font-bold text-white/20">{course.category}</span>
+        <div
+          className={`h-44 bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} relative overflow-hidden bg-gray-200`}
+          style={course.thumbnail ? { backgroundImage: `url(${course.thumbnail})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' } : {}}
+        >
+          {course.thumbnail ? null : (
+            <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white/20">{course.category}</span>
           )}
           <div className="absolute bottom-3 right-3">
             <motion.span

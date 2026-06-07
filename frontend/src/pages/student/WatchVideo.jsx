@@ -209,6 +209,50 @@ const WatchVideo = () => {
   const playerRef = useRef(null);
   const playerContainerRef = useRef(null);
 
+  useEffect(() => {
+    const onFsChange = () => {
+      const fs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+      setIsFullscreen(fs);
+      if (!fs && screen.orientation && screen.orientation.unlock) {
+        try { screen.orientation.unlock(); } catch {}
+      }
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+    document.addEventListener('mozfullscreenchange', onFsChange);
+    document.addEventListener('MSFullscreenChange', onFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+      document.removeEventListener('webkitfullscreenchange', onFsChange);
+      document.removeEventListener('mozfullscreenchange', onFsChange);
+      document.removeEventListener('MSFullscreenChange', onFsChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const container = playerContainerRef.current;
+    if (!container) return;
+    const stripAllowFullscreen = () => {
+      const iframe = container.querySelector('iframe');
+      if (iframe) {
+        iframe.setAttribute('allowfullscreen', 'false');
+        iframe.setAttribute('webkitallowfullscreen', 'false');
+        iframe.setAttribute('mozallowfullscreen', 'false');
+        try {
+          const src = iframe.getAttribute('src') || '';
+          if (!/playsinline=1/.test(src)) {
+            const sep = src.includes('?') ? '&' : '?';
+            iframe.setAttribute('src', `${src}${sep}playsinline=1`);
+          }
+        } catch {}
+      }
+    };
+    stripAllowFullscreen();
+    const observer = new MutationObserver(stripAllowFullscreen);
+    observer.observe(container, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [currentLesson?._id]);
+
   const allVideos = getAllVideos(chapters);
   const currentIndex = allVideos.findIndex(v => v._id === lessonId);
   const currentLesson = allVideos[currentIndex] || allVideos[0];
@@ -262,14 +306,27 @@ const WatchVideo = () => {
   };
   const handleVolumeChange = (e) => setVolume(parseFloat(e.target.value));
   const toggleMute = () => setMuted(m => !m);
-  const toggleFullscreen = useCallback(() => {
+  const toggleFullscreen = useCallback(async () => {
     const el = playerContainerRef.current;
     if (!document.fullscreenElement) {
-      el?.requestFullscreen?.();
-      setIsFullscreen(true);
+      const req = el?.requestFullscreen || el?.webkitRequestFullscreen || el?.mozRequestFullScreen || el?.msRequestFullscreen;
+      if (req) {
+        try {
+          await req.call(el);
+          setIsFullscreen(true);
+          if (screen.orientation && screen.orientation.lock) {
+            try { await screen.orientation.lock('landscape'); } catch {}
+          }
+        } catch {}
+      }
     } else {
-      document.exitFullscreen?.();
-      setIsFullscreen(false);
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+      if (exit) {
+        try { await exit.call(document); setIsFullscreen(false); } catch {}
+        if (screen.orientation && screen.orientation.unlock) {
+          try { screen.orientation.unlock(); } catch {}
+        }
+      }
     }
   }, []);
   const formatTime = (s) => {
@@ -332,10 +389,20 @@ const WatchVideo = () => {
                 onEnded={() => setPlaying(false)}
                 config={{
                   youtube: {
-                    playerVars: { modestbranding: 1, rel: 0, iv_load_policy: 3, controls: 0, disablekb: 1, fs: 0 },
+                    playerVars: { modestbranding: 1, rel: 0, iv_load_policy: 3, controls: 0, disablekb: 1, fs: 0, playsinline: 1, enablejsapi: 1 },
                   },
                 }}
+                style={{ pointerEvents: 'none' }}
                 className="react-player"
+              />
+
+              {/* Transparent click-blocker so iframe can't capture taps and open YouTube */}
+              <div
+                onClick={(e) => { e.stopPropagation(); handlePlayPause(); }}
+                onTouchStart={(e) => { e.stopPropagation(); }}
+                className="absolute inset-0 z-0"
+                style={{ background: 'transparent' }}
+                aria-label="Tap to play/pause"
               />
 
               {/* Center play button overlay */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
@@ -8,44 +8,46 @@ import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Courses from './pages/Courses';
-import CourseDetail from './pages/CourseDetail';
-import LiveClass from './pages/LiveClass';
-import VerifyEmail from './pages/VerifyEmail';
-import ForgotPassword, { ResetPassword } from './pages/ForgotPassword';
-import LiveSessionEnroll from './pages/student/LiveSessionEnroll';
-import LoginModal from './pages/LoginModal';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import Overview from './pages/admin/Overview';
-import ManageCourses from './pages/admin/ManageCourses';
-import ManageStudents from './pages/admin/ManageStudents';
-import Payments from './pages/admin/Payments';
-import Notices from './pages/admin/Notices';
-import Doubts from './pages/admin/Doubts';
-import Reviews from './pages/admin/Reviews';
-import ManageLiveSessions from './pages/admin/ManageLiveSessions';
-import ManageEnrollments from './pages/admin/ManageEnrollments';
-import ManageSubmissions from './pages/admin/ManageSubmissions';
-import Reports from './pages/admin/Reports';
-import AuditLogs from './pages/admin/AuditLogs';
-import StudentDashboard from './pages/student/StudentDashboard';
-import MyCourses from './pages/student/MyCourses';
-import WatchVideo from './pages/student/WatchVideo';
-import Quiz from './pages/student/Quiz';
-import Assignments from './pages/student/Assignments';
-import WriteReview from './pages/student/WriteReview';
-import StudentDoubts from './pages/student/Doubts';
-import Notifications from './pages/student/Notifications';
-import Profile from './pages/student/Profile';
-import StudentNotices from './pages/student/Notices';
-import Certificates from './pages/student/Certificates';
-import CertificateView from './pages/student/CertificateView';
-import TeachingBoard from './pages/student/TeachingBoard';
-import Referrals from './pages/student/Referrals';
-import CheckoutPage from './pages/student/CheckoutPage';
-import PaymentSuccess from './pages/student/PaymentSuccess';
-import PaymentHistory from './pages/student/PaymentHistory';
-import Chatbot from './components/Chatbot';
-import InstallPrompt from './components/InstallPrompt';
+
+const CourseDetail = lazy(() => import('./pages/CourseDetail'));
+const LiveClass = lazy(() => import('./pages/LiveClass'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then(m => ({ default: m.default })));
+const ResetPassword = lazy(() => import('./pages/ForgotPassword').then(m => ({ default: m.ResetPassword })));
+const LiveSessionEnroll = lazy(() => import('./pages/student/LiveSessionEnroll'));
+const LoginModal = lazy(() => import('./pages/LoginModal'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const Overview = lazy(() => import('./pages/admin/Overview'));
+const ManageCourses = lazy(() => import('./pages/admin/ManageCourses'));
+const ManageStudents = lazy(() => import('./pages/admin/ManageStudents'));
+const Payments = lazy(() => import('./pages/admin/Payments'));
+const Notices = lazy(() => import('./pages/admin/Notices'));
+const Doubts = lazy(() => import('./pages/admin/Doubts'));
+const Reviews = lazy(() => import('./pages/admin/Reviews'));
+const ManageLiveSessions = lazy(() => import('./pages/admin/ManageLiveSessions'));
+const ManageEnrollments = lazy(() => import('./pages/admin/ManageEnrollments'));
+const ManageSubmissions = lazy(() => import('./pages/admin/ManageSubmissions'));
+const Reports = lazy(() => import('./pages/admin/Reports'));
+const AuditLogs = lazy(() => import('./pages/admin/AuditLogs'));
+const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
+const MyCourses = lazy(() => import('./pages/student/MyCourses'));
+const WatchVideo = lazy(() => import('./pages/student/WatchVideo'));
+const Quiz = lazy(() => import('./pages/student/Quiz'));
+const Assignments = lazy(() => import('./pages/student/Assignments'));
+const WriteReview = lazy(() => import('./pages/student/WriteReview'));
+const StudentDoubts = lazy(() => import('./pages/student/Doubts'));
+const Notifications = lazy(() => import('./pages/student/Notifications'));
+const Profile = lazy(() => import('./pages/student/Profile'));
+const StudentNotices = lazy(() => import('./pages/student/Notices'));
+const Certificates = lazy(() => import('./pages/student/Certificates'));
+const CertificateView = lazy(() => import('./pages/student/CertificateView'));
+const TeachingBoard = lazy(() => import('./pages/student/TeachingBoard'));
+const Referrals = lazy(() => import('./pages/student/Referrals'));
+const CheckoutPage = lazy(() => import('./pages/student/CheckoutPage'));
+const PaymentSuccess = lazy(() => import('./pages/student/PaymentSuccess'));
+const PaymentHistory = lazy(() => import('./pages/student/PaymentHistory'));
+const Chatbot = lazy(() => import('./components/Chatbot'));
+const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
 
 const DashboardRedirect = () => {
   const { user } = useAuth();
@@ -78,7 +80,8 @@ const AppContent = () => {
   return (
     <>
       {!isDashboard && !isCheckout && <Navbar onLoginClick={() => setLoginModal(true)} />}
-      <main className={isDashboard || isCheckout ? '' : 'min-h-screen'}>
+        <main className={isDashboard || isCheckout ? '' : 'min-h-screen'}>
+        <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>}>
         <Routes>
           <Route path="/" element={<Home onLoginClick={() => setLoginModal(true)} />} />
           <Route path="/courses" element={<Courses />} />
@@ -146,11 +149,16 @@ const AppContent = () => {
             <Route path="audit-logs" element={<AuditLogs />} />
           </Route>
         </Routes>
+        </Suspense>
       </main>
       {!isDashboard && !isCheckout && <Footer />}
       {!isDashboard && <Chatbot />}
       <InstallPrompt />
-      {loginModal && <LoginModal onClose={() => setLoginModal(false)} />}
+      {loginModal && (
+        <Suspense fallback={null}>
+          <LoginModal onClose={() => setLoginModal(false)} />
+        </Suspense>
+      )}
     </>
   );
 };

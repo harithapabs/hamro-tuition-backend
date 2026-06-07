@@ -4,26 +4,65 @@ import { FiDownload, FiX, FiSmartphone } from 'react-icons/fi';
 const InstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+      setInstalled(true);
+      return;
+    }
+
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
       const dismissed = localStorage.getItem('pwa-prompt-dismissed');
       if (!dismissed) {
-        setTimeout(() => setShowPrompt(true), 3000);
+        setTimeout(() => setShowPrompt(true), 2000);
       }
     };
     window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+
+    const installedHandler = () => {
+      setInstalled(true);
+      setShowPrompt(false);
+    };
+    window.addEventListener('appinstalled', installedHandler);
+
+    const dismissed = localStorage.getItem('pwa-prompt-dismissed');
+    if (!dismissed && !deferredPrompt) {
+      setTimeout(() => {
+        if (!deferredPrompt) setShowPrompt(true);
+      }, 8000);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', installedHandler);
+    };
+  }, [deferredPrompt]);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') setDeferredPrompt(null);
-    setShowPrompt(false);
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setInstalled(true);
+          setDeferredPrompt(null);
+        }
+        setShowPrompt(false);
+        return;
+      } catch {}
+    }
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    if (isIOS) {
+      alert('To install:\n1. Tap the Share button (square with arrow)\n2. Scroll and tap "Add to Home Screen"\n3. Tap "Add"');
+    } else if (isAndroid) {
+      alert('To install:\n1. Tap the menu (⋮) in Chrome\n2. Tap "Install app" or "Add to Home screen"\n3. Tap "Install"');
+    } else {
+      alert('To install:\n1. Click the install icon (⊕) in the address bar\n2. Click "Install"');
+    }
   };
 
   const dismiss = () => {
@@ -31,7 +70,7 @@ const InstallPrompt = () => {
     localStorage.setItem('pwa-prompt-dismissed', '1');
   };
 
-  if (!showPrompt || !deferredPrompt) return null;
+  if (installed || (!showPrompt)) return null;
 
   return (
     <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 animate-slide-up">

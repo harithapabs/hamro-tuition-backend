@@ -273,16 +273,23 @@ const Home = ({ onLoginClick }) => {
               >
                 <Link to={`/course/${course._id || course.id}`} className="block group">
                   <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                    <div className={`h-44 bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} flex items-center justify-center relative`}>
-                      <span className="text-5xl font-bold text-white/10">{course.category === 'School' ? 'S' : course.category === 'Plus2' ? '+2' : course.category === 'Bachelor' ? 'B' : course.category === 'Master' ? 'M' : course.category === 'Aayog' ? 'A' : '?'}</span>
-                      <div className="absolute top-3 left-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${categoryBadge[course.category] || 'bg-white/20 text-white'}`}>
+                    <div
+                      className={`h-44 bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} relative overflow-hidden bg-gray-200`}
+                      style={course.thumbnail ? { backgroundImage: `url(${course.thumbnail})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' } : {}}
+                    >
+                      {!course.thumbnail && (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-5xl font-bold text-white/20">{course.category === 'School' ? 'S' : course.category === 'Plus2' ? '+2' : course.category === 'Bachelor' ? 'B' : course.category === 'Master' ? 'M' : course.category === 'Aayog' ? 'A' : '?'}</span>
+                        </div>
+                      )}
+                      {course.price === 0 && (
+                        <div className="absolute top-3 right-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium z-10">Free</div>
+                      )}
+                      <div className="absolute bottom-3 right-3 z-10">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm ${categoryBadge[course.category] || 'bg-white/90 text-gray-800'}`}>
                            {course.category === 'School' ? 'School Level' : course.category === 'Plus2' ? '+2 Level' : course.category === 'Bachelor' ? 'Bachelor' : course.category === 'Master' ? 'Master' : course.category === 'Aayog' ? 'Aayog Tayari' : course.category}
                         </span>
                       </div>
-                      {course.price === 0 && (
-                        <div className="absolute top-3 right-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">Free</div>
-                      )}
                     </div>
                     <div className="p-5">
                       <h3 className="font-semibold text-gray-900 text-base mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">

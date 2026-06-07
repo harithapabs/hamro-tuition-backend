@@ -9,11 +9,16 @@ router.use(adminAuth);
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const students = await req.db.users.count({ role: 'student' });
-    const courses = await req.db.courses.count({});
-    const payments = await req.db.payments.find({});
-    const enrollments = await req.db.enrollments.find({ status: 'approved' });
-    const liveSessionsList = await req.db.liveSessions.find({});
+    const [studentsCount, coursesCount, payments, enrollments, liveSessionsList, allCourses, allReviews] = await Promise.all([
+      req.db.users.count({ role: 'student' }),
+      req.db.courses.count({}),
+      req.db.payments.find({}),
+      req.db.enrollments.find({ status: 'approved' }),
+      req.db.liveSessions.find({}),
+      req.db.courses.find({}),
+      req.db.reviews.find({}).sort({ createdAt: -1 }).limit(20),
+    ]);
+
     const lsPriceMap = {};
     liveSessionsList.forEach(ls => { lsPriceMap[ls._id] = parseFloat(ls.price) || 0; });
     const completedPayments = payments.filter(p => p.status === 'completed' || p.status === 'approved');
@@ -31,23 +36,29 @@ router.get('/dashboard', async (req, res) => {
       monthlyRevenue[month] = (monthlyRevenue[month] || 0) + (lsPriceMap[e.liveSessionId] || 0);
     });
 
-    const allCourses = await req.db.courses.find({});
     const categoryDist = {};
     allCourses.forEach(c => { categoryDist[c.category] = (categoryDist[c.category] || 0) + 1; });
 
-    const allReviews = await req.db.reviews.find({}).sort({ createdAt: -1 });
-    const reviewsWithUsers = [];
-    for (const r of allReviews) {
-      const user = await req.db.users.findOne({ _id: r.userId });
-      const course = await req.db.courses.findOne({ _id: r.courseId });
-      reviewsWithUsers.push({ ...r, user: user ? { name: user.name, email: user.email } : { name: 'Unknown' }, course: course ? { title: course.title } : { title: 'Unknown' } });
-    }
+    const userIds = [...new Set(allReviews.map(r => r.userId).filter(Boolean))];
+    const courseIds = [...new Set(allReviews.map(r => r.courseId).filter(Boolean))];
+    const [reviewUsers, reviewCourses] = await Promise.all([
+      req.db.users.find({ _id: { $in: userIds } }),
+      req.db.courses.find({ _id: { $in: courseIds } }),
+    ]);
+    const userMap = Object.fromEntries(reviewUsers.map(u => [u._id, u]));
+    const courseMap = Object.fromEntries(reviewCourses.map(c => [c._id, c]));
+    const reviewsWithUsers = allReviews.map(r => ({
+      ...r,
+      user: userMap[r.userId] ? { name: userMap[r.userId].name, email: userMap[r.userId].email } : { name: 'Unknown' },
+      course: courseMap[r.courseId] ? { title: courseMap[r.courseId].title } : { title: 'Unknown' },
+    }));
 
+    res.set('Cache-Control', 'private, max-age=30');
     res.json({
-      totalStudents: students,
-      totalCourses: courses,
+      totalStudents: studentsCount,
+      totalCourses: coursesCount,
       totalRevenue,
-      activeUsers: students,
+      activeUsers: studentsCount,
       revenueData: Object.entries(monthlyRevenue).map(([month, revenue]) => ({ month, revenue })),
       categoryData: Object.entries(categoryDist).map(([name, count]) => ({ name, count })),
       recentPayments,
@@ -59,11 +70,13 @@ router.get('/dashboard', async (req, res) => {
 
 router.get('/reports', async (req, res) => {
   try {
-    const courses = await req.db.courses.find({});
-    const payments = await req.db.payments.find({});
-    const students = await req.db.users.find({ role: 'student' });
-    const enrollments = await req.db.enrollments.find({});
-    const liveSessions = await req.db.liveSessions.find({});
+    const [courses, payments, students, enrollments, liveSessions] = await Promise.all([
+      req.db.courses.find({}),
+      req.db.payments.find({}),
+      req.db.users.find({ role: 'student' }),
+      req.db.enrollments.find({}),
+      req.db.liveSessions.find({}),
+    ]);
     const lsPriceMap = {};
     liveSessions.forEach(ls => { lsPriceMap[ls._id] = parseFloat(ls.price) || 0; });
 
@@ -124,6 +137,7 @@ router.get('/reports', async (req, res) => {
       return { name: lvl, courses: lvlCourses.length, students: lvlStudents.length, revenue: lvlRevenue };
     });
 
+    res.set('Cache-Control', 'private, max-age=60');
     res.json({ monthlyReport, subjectReport, levelReport });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });

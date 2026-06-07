@@ -124,8 +124,13 @@ const CourseDetail = ({ onLoginClick }) => {
               <p className="text-white/70 text-sm leading-relaxed line-clamp-3">{course.description}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <div className={`h-40 rounded-xl bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} flex items-center justify-center mb-4`}>
-                <FaPlay className="text-4xl text-white/60" />
+              <div
+                className={`h-40 rounded-xl bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} mb-4 overflow-hidden relative bg-gray-200`}
+                style={course.thumbnail ? { backgroundImage: `url(${course.thumbnail})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' } : {}}
+              >
+                {course.thumbnail ? null : (
+                  <FaPlay className="absolute inset-0 m-auto text-4xl text-white/60" />
+                )}
               </div>
               <div className="text-3xl font-bold mb-4">
                 {course.price > 0 ? `रू ${course.price.toLocaleString()}` : 'Free'}

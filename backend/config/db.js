@@ -17,7 +17,7 @@ if (USE_MONGODB) {
     } catch (e) {
       return mongoose.model(
         collectionName,
-        new mongoose.Schema({}, { strict: false, versionKey: false, _id: false }),
+        new mongoose.Schema({ _id: String }, { strict: false, versionKey: false }),
         collectionName
       );
     }
