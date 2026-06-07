@@ -55,6 +55,12 @@ router.get('/dashboard', cacheMiddleware({ ttl: 30 }), async (req, res) => {
     }));
 
     res.set('Cache-Control', 'private, max-age=30');
+    const slimCourses = allCourses.map(({ chapters, ...rest }) => {
+      if (rest.thumbnail && typeof rest.thumbnail === 'string' && rest.thumbnail.startsWith('data:')) {
+        rest.thumbnail = '';
+      }
+      return rest;
+    });
     res.json({
       totalStudents: studentsCount,
       totalCourses: coursesCount,
@@ -63,7 +69,7 @@ router.get('/dashboard', cacheMiddleware({ ttl: 30 }), async (req, res) => {
       revenueData: Object.entries(monthlyRevenue).map(([month, revenue]) => ({ month, revenue })),
       categoryData: Object.entries(categoryDist).map(([name, count]) => ({ name, count })),
       recentPayments,
-      courses: allCourses,
+      courses: slimCourses,
       reviews: reviewsWithUsers,
     });
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -71,13 +77,14 @@ router.get('/dashboard', cacheMiddleware({ ttl: 30 }), async (req, res) => {
 
 router.get('/reports', cacheMiddleware({ ttl: 60 }), async (req, res) => {
   try {
-    const [courses, payments, students, enrollments, liveSessions] = await Promise.all([
+    const [rawCourses, payments, students, enrollments, liveSessions] = await Promise.all([
       req.db.courses.find({}),
       req.db.payments.find({}),
       req.db.users.find({ role: 'student' }),
       req.db.enrollments.find({}),
       req.db.liveSessions.find({}),
     ]);
+    const courses = rawCourses.map(({ chapters, ...rest }) => rest);
     const lsPriceMap = {};
     liveSessions.forEach(ls => { lsPriceMap[ls._id] = parseFloat(ls.price) || 0; });
 

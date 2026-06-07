@@ -13,7 +13,13 @@ router.get('/', cacheMiddleware({ ttl: 120 }), async (req, res) => {
       query.$or = [{ title: re }, { instructor: re }, { description: re }, { category: re }];
     }
     const courses = await req.db.courses.find(query).sort({ createdAt: -1 });
-    res.json(courses);
+    const slim = courses.map(({ chapters, ...rest }) => {
+      if (rest.thumbnail && typeof rest.thumbnail === 'string' && rest.thumbnail.startsWith('data:')) {
+        rest.thumbnail = '';
+      }
+      return rest;
+    });
+    res.json(slim);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
