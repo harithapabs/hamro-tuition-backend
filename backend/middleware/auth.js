@@ -101,7 +101,7 @@ const auth = async (req, res, next) => {
     if (!user) return res.status(401).json({ message: 'User not found' });
     if (user.isBlocked) return res.status(403).json({ message: 'Account blocked' });
 
-    if (decoded.jti && user.currentSessionId && decoded.jti !== user.currentSessionId) {
+    if (decoded.jti && user.currentSessionId && decoded.jti !== user.currentSessionId && user.role !== 'admin') {
       return res.status(401).json({ message: 'Session ended. Logged in from another device.' });
     }
 

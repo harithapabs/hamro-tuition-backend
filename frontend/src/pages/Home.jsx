@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 import {
   FaGraduationCap, FaBook, FaFlask, FaLaptopCode, FaUniversity, FaStar,
   FaUserTie, FaUsers, FaArrowRight, FaQuoteLeft, FaBell,
-  FaChalkboardTeacher, FaSmile, FaCalendarAlt,
+  FaChalkboardTeacher, FaSmile, FaCalendarAlt, FaVideo, FaClock, FaPlay,
 } from 'react-icons/fa';
 import ParticleBackground from '../components/ParticleBackground';
-import { courseAPI, noticeAPI } from '../utils/api';
+import { courseAPI, noticeAPI, liveSessionAPI } from '../utils/api';
 
 const categories = [
   { key: 'School', title: 'School Level', icon: FaBook, subjects: 'Class 8, 9, 10 — Science, Math, English', gradient: 'from-green-400 to-emerald-500', desc: 'Build strong fundamentals' },
@@ -97,10 +97,67 @@ const staggerContainer = {
   transition: { staggerChildren: 0.1 },
 };
 
+const LiveClassSection = ({ sessions = [] }) => {
+  if (!sessions.length) return null;
+  return (
+    <section className="py-16 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div {...fadeUp} className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-100 text-red-700 rounded-full text-sm font-semibold mb-3">
+            <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+            LIVE CLASSES
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Upcoming Live Sessions</h2>
+          <p className="text-gray-600 mt-2">Join our expert teachers in real-time interactive classes</p>
+        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {sessions.map((s, i) => {
+            const date = new Date(s.scheduledAt);
+            return (
+              <motion.div key={s._id || i} {...fadeUp} transition={{ delay: i * 0.08 }}
+                className="bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all overflow-hidden group border border-gray-100">
+                <div className="bg-gradient-to-br from-red-500 to-orange-500 p-4 text-white relative overflow-hidden">
+                  <div className="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full" />
+                  <FaVideo className="text-3xl mb-2" />
+                  <h3 className="font-bold text-lg line-clamp-2 leading-tight">{s.title}</h3>
+                </div>
+                <div className="p-4 space-y-2">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <FaCalendarAlt className="mr-2 text-red-500" />
+                    {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <FaClock className="mr-2 text-orange-500" />
+                    {date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                  {s.teacher && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <FaChalkboardTeacher className="mr-2 text-blue-500" />
+                      {s.teacher}
+                    </div>
+                  )}
+                  {s.description && (
+                    <p className="text-xs text-gray-500 line-clamp-2 pt-1">{s.description}</p>
+                  )}
+                  <Link to="/live-classes"
+                    className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors group-hover:scale-[1.02]">
+                    <FaPlay className="text-xs" /> Join Now
+                  </Link>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const Home = ({ onLoginClick }) => {
   const [notices, setNotices] = useState([]);
   const [featuredCourses, setFeaturedCourses] = useState(sampleCourses);
   const [testimonials, setTestimonials] = useState([]);
+  const [liveSessions, setLiveSessions] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,6 +172,12 @@ const Home = ({ onLoginClick }) => {
       try {
         const { data } = await courseAPI.getApprovedReviews();
         setTestimonials(Array.isArray(data) ? data : []);
+      } catch {}
+      try {
+        const { data } = await liveSessionAPI.getAll();
+        const now = new Date();
+        const upcoming = (Array.isArray(data) ? data : []).filter(s => new Date(s.scheduledAt) > now);
+        setLiveSessions(upcoming.slice(0, 4));
       } catch {}
     };
     fetchData();
@@ -188,25 +251,10 @@ const Home = ({ onLoginClick }) => {
             </Link>
           </motion.div>
         </div>
-
-        {/* Marquee Course Slider */}
-        {featuredCourses.length > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 overflow-hidden">
-            <div className="flex gap-5 animate-marquee py-4">
-              {[...featuredCourses, ...featuredCourses].map((course, i) => (
-                <Link key={i} to={`/course/${course._id || course.id}`}
-                  className="flex-shrink-0 w-64 bg-white/90 rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow group">
-                  <p className="text-gray-900 font-semibold text-sm truncate group-hover:text-blue-600 transition-colors">{course.title}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-gray-400">{course.category}</span>
-                    <span className="text-sm font-bold text-blue-600">{course.price > 0 ? `रू ${course.price.toLocaleString()}` : 'Free'}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
       </section>
+
+      {/* Live Classes Section */}
+      <LiveClassSection sessions={liveSessions} />
 
       {/* B) Features/Categories Section */}
       <section className="py-20 bg-white">

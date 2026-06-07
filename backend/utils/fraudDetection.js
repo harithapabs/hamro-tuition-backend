@@ -14,7 +14,7 @@ function isPlausibleBase64Image(s) {
   if (!isBase64Image(s)) return { valid: false, reason: 'Not a valid image format' };
   const clean = s.replace(/^data:image\/\w+;base64,/, '');
   if (clean.length < 200) return { valid: false, reason: 'Image too small (likely fake/empty)' };
-  if (clean.length > 5 * 1024 * 1024) return { valid: false, reason: 'Image too large' };
+  if (clean.length > 5 * 1024 * 1024) return { valid: false, reason: 'Image too large (max 5MB)' };
   return { valid: true };
 }
 

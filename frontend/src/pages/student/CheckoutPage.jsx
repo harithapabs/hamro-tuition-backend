@@ -80,6 +80,17 @@ const CheckoutPage = () => {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Image must be less than 5MB');
+      e.target.value = '';
+      return;
+    }
+    if (file.size < 10 * 1024) {
+      toast.error('Image is too small (minimum 10KB). Please upload a clear payment screenshot.');
+      e.target.value = '';
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file (PNG, JPG, etc.)');
+      e.target.value = '';
       return;
     }
     const reader = new FileReader();
@@ -459,8 +470,20 @@ const CheckoutPage = () => {
                 disabled={!selectedMethod || !screenshot || !transactionId || submitting}
                 className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submitting ? 'Submitting...' : 'Submit Payment'}
+                {submitting ? 'Submitting...' :
+                 !selectedMethod ? 'Select Payment Method' :
+                 !screenshot ? 'Upload Payment Screenshot' :
+                 !transactionId ? 'Enter Transaction ID' :
+                 'Submit Payment'}
               </button>
+              {(!selectedMethod || !screenshot || !transactionId) && (
+                <p className="text-xs text-amber-600 text-center mt-2 flex items-center justify-center gap-1">
+                  <span>⚠</span>
+                  {!selectedMethod ? 'Please select a payment method' :
+                   !screenshot ? 'Please upload your payment screenshot' :
+                   'Please enter a valid transaction ID (6+ characters)'}
+                </p>
+              )}
 
               <p className="text-xs text-gray-400 text-center mt-3">
                 Course will be unlocked within 24 hours after verification

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaSearch, FaStar, FaUserTie, FaGraduationCap, FaBook, FaFlask, FaLaptopCode, FaUniversity } from 'react-icons/fa';
+import { FaSearch, FaStar, FaUserTie, FaGraduationCap, FaBook, FaFlask, FaLaptopCode, FaUniversity, FaSadTear } from 'react-icons/fa';
 import { courseAPI } from '../utils/api';
 import Loading from '../components/Loading';
+import { SkeletonList } from '../components/Skeleton';
+import { EmptyState } from '../components/EmptyState';
 
 const categories = [
   { value: '', label: 'All Courses', icon: FaGraduationCap },
@@ -195,15 +197,18 @@ const Courses = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
-          </div>
+          <SkeletonList count={6} />
          ) : courses.length === 0 ? (
-          <div className="text-center py-16">
-            <FaGraduationCap className="text-6xl text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No courses found</h3>
-            <p className="text-gray-400">Try adjusting your search or filter criteria</p>
-          </div>
+          <EmptyState
+            icon={activeCategory || searchQuery ? FaSearch : FaSadTear}
+            title={activeCategory || searchQuery ? 'No courses match your search' : 'No courses available yet'}
+            description={activeCategory || searchQuery
+              ? 'Try a different keyword or browse all categories'
+              : 'New courses are being prepared. Please check back soon!'}
+            actionLabel="View All Courses"
+            actionTo="/courses"
+            variant="courses"
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course, i) => (

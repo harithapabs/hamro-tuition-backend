@@ -4,8 +4,9 @@
 @tailwind utilities;
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { font-family: 'Poppins', sans-serif; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body { font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+input, select, textarea, button { font-size: 16px; }
 
 @layer utilities {
   .glass {
@@ -58,16 +59,5 @@ body { font-family: 'Poppins', sans-serif; }
 
 #chatbot-messages::-webkit-scrollbar { width: 4px; }
 #chatbot-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.animate-marquee {
-  animation: marquee 30s linear infinite;
-}
-.animate-marquee:hover {
-  animation-play-state: paused;
-}
 
 

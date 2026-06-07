@@ -41,6 +41,43 @@ const LoginModal = ({ onClose }) => {
     return errs;
   };
 
+  const validateField = (form, field) => {
+    if (form === 'login') {
+      if (field === 'email') {
+        if (!loginForm.email) return 'Email is required';
+        if (!validateEmail(loginForm.email)) return 'Invalid email format';
+      }
+      if (field === 'password' && !loginForm.password) return 'Password is required';
+    } else {
+      if (field === 'name' && !signupForm.name.trim()) return 'Name is required';
+      if (field === 'email') {
+        if (!signupForm.email) return 'Email is required';
+        if (!validateEmail(signupForm.email)) return 'Invalid email format';
+      }
+      if (field === 'password') {
+        if (!signupForm.password) return 'Password is required';
+        if (signupForm.password.length < 8) return 'Min 8 characters';
+        if (!/[A-Za-z]/.test(signupForm.password) || !/[0-9]/.test(signupForm.password)) {
+          return 'Must include letters and numbers';
+        }
+      }
+      if (field === 'confirmPassword' && signupForm.password !== signupForm.confirmPassword) {
+        return 'Passwords do not match';
+      }
+    }
+    return '';
+  };
+
+  const onFieldBlur = (form, field) => {
+    const msg = validateField(form, field);
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (msg) next[field] = msg;
+      else delete next[field];
+      return next;
+    });
+  };
+
   const validateSignup = () => {
     const errs = {};
     if (!signupForm.name.trim()) errs.name = 'Name is required';
@@ -211,19 +248,25 @@ const LoginModal = ({ onClose }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <div className="relative">
                   <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                  <input type="email" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} placeholder="your@email.com"
-                    className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="email" value={loginForm.email}
+                    onChange={(e) => { setLoginForm({ ...loginForm, email: e.target.value }); if (errors.email) setErrors(({ email, ...r }) => r); }}
+                    onBlur={() => onFieldBlur('login', 'email')}
+                    placeholder="your@email.com"
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.email ? 'border-red-400 bg-red-50/50' : ''}`} />
                 </div>
-                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                {errors.email && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><span>⚠</span>{errors.email}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <div className="relative">
                   <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                  <input type="password" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="password" value={loginForm.password}
+                    onChange={(e) => { setLoginForm({ ...loginForm, password: e.target.value }); if (errors.password) setErrors(({ password, ...r }) => r); }}
+                    onBlur={() => onFieldBlur('login', 'password')}
+                    placeholder="••••••••"
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.password ? 'border-red-400 bg-red-50/50' : ''}`} />
                 </div>
-                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                {errors.password && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><span>⚠</span>{errors.password}</p>}
                 <div className="text-right mt-1">
                   <Link to="/forgot-password" onClick={onClose} className="text-xs text-blue-600 hover:underline">
                     Forgot password?
@@ -242,37 +285,49 @@ const LoginModal = ({ onClose }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                 <div className="relative">
                   <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                  <input type="text" value={signupForm.name} onChange={(e) => setSignupForm({ ...signupForm, name: e.target.value })} placeholder="Your full name"
-                    className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="text" value={signupForm.name}
+                    onChange={(e) => { setSignupForm({ ...signupForm, name: e.target.value }); if (errors.name) setErrors(({ name, ...r }) => r); }}
+                    onBlur={() => onFieldBlur('signup', 'name')}
+                    placeholder="Your full name"
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.name ? 'border-red-400 bg-red-50/50' : ''}`} />
                 </div>
-                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                {errors.name && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><span>⚠</span>{errors.name}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <div className="relative">
                   <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                  <input type="email" value={signupForm.email} onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })} placeholder="your@email.com"
-                    className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="email" value={signupForm.email}
+                    onChange={(e) => { setSignupForm({ ...signupForm, email: e.target.value }); if (errors.email) setErrors(({ email, ...r }) => r); }}
+                    onBlur={() => onFieldBlur('signup', 'email')}
+                    placeholder="your@email.com"
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.email ? 'border-red-400 bg-red-50/50' : ''}`} />
                 </div>
-                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                {errors.email && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><span>⚠</span>{errors.email}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <div className="relative">
                   <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                  <input type="password" value={signupForm.password} onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })} placeholder="Min 8 chars, letters + numbers"
-                    className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="password" value={signupForm.password}
+                    onChange={(e) => { setSignupForm({ ...signupForm, password: e.target.value }); if (errors.password) setErrors(({ password, ...r }) => r); }}
+                    onBlur={() => onFieldBlur('signup', 'password')}
+                    placeholder="Min 8 chars, letters + numbers"
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.password ? 'border-red-400 bg-red-50/50' : ''}`} />
                 </div>
-                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                {errors.password && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><span>⚠</span>{errors.password}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
                 <div className="relative">
                   <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                  <input type="password" value={signupForm.confirmPassword} onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })} placeholder="Repeat password"
-                    className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="password" value={signupForm.confirmPassword}
+                    onChange={(e) => { setSignupForm({ ...signupForm, confirmPassword: e.target.value }); if (errors.confirmPassword) setErrors(({ confirmPassword, ...r }) => r); }}
+                    onBlur={() => onFieldBlur('signup', 'confirmPassword')}
+                    placeholder="Repeat password"
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.confirmPassword ? 'border-red-400 bg-red-50/50' : ''}`} />
                 </div>
-                {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><span>⚠</span>{errors.confirmPassword}</p>}
               </div>
               {captcha && <Captcha />}
               <button type="submit" disabled={loading} className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg text-sm">
