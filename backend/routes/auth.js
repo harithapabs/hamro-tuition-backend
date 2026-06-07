@@ -335,16 +335,4 @@ router.post('/2fa/disable', auth, async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-router.post('/seed-db', async (req, res) => {
-  try {
-    const { secret } = req.body;
-    if (secret !== 'hamro-temp-seed-2026') return res.status(403).json({ message: 'Invalid secret' });
-    const { runSeed } = require('../seed-runner');
-    await runSeed();
-    res.json({ message: 'Seed completed!' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
 module.exports = router;
