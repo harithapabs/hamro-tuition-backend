@@ -36,9 +36,12 @@ const CourseDetail = ({ onLoginClick }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Description');
+  const [expandedChapter, setExpandedChapter] = useState(null);
   const [expandedLesson, setExpandedLesson] = useState(null);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+  const totalVideos = course?.chapters?.reduce((sum, ch) => sum + (ch.videos?.length || 0), 0) || course?.lessons?.length || 0;
 
   const isEnrolled = user?.enrolledCourses?.some((c) => {
     if (typeof c === 'string') return c === id;
@@ -118,7 +121,7 @@ const CourseDetail = ({ onLoginClick }) => {
                 </div>
                 <div className="flex items-center gap-1">
                   <FaBookOpen />
-                  <span>{course.lessons?.length || 0} lessons</span>
+                  <span>{totalVideos} lessons</span>
                 </div>
               </div>
               <p className="text-white/70 text-sm leading-relaxed line-clamp-3">{course.description}</p>
@@ -153,7 +156,7 @@ const CourseDetail = ({ onLoginClick }) => {
                   Enroll Now
                 </button>
               )}
-              {course.lessons?.length > 0 && (
+              {totalVideos > 0 && (
                 <p className="text-center text-white/60 text-xs mt-3">
                   <FaRegClock className="inline mr-1" />
                   Full lifetime access
@@ -196,7 +199,7 @@ const CourseDetail = ({ onLoginClick }) => {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
                 {[
-                  { icon: FaBookOpen, label: 'Lessons', value: course.lessons?.length || 0 },
+                  { icon: FaBookOpen, label: 'Lessons', value: totalVideos },
                   { icon: FaClock, label: 'Duration', value: 'Self-paced' },
                   { icon: FaStar, label: 'Rating', value: `${course.rating?.toFixed(1) || '0.0'} / 5` },
                   { icon: FaUserTie, label: 'Instructor', value: course.instructor || 'Hamro Tuition' },
@@ -219,7 +222,56 @@ const CourseDetail = ({ onLoginClick }) => {
               exit={{ opacity: 0, y: -10 }}
               className="bg-white rounded-2xl p-6 shadow-sm"
             >
-              {course.lessons?.length > 0 ? (
+              {course.chapters?.length > 0 ? (
+                <div className="space-y-3">
+                  {course.chapters.map((ch, chIdx) => (
+                    <div key={chIdx} className="border rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => setExpandedChapter(expandedChapter === chIdx ? null : chIdx)}
+                        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
+                            {chIdx + 1}
+                          </span>
+                          <div className="text-left">
+                            <p className="font-medium text-gray-900 text-sm">{ch.name || `Chapter ${chIdx + 1}`}</p>
+                            <p className="text-xs text-gray-400">{ch.videos?.length || 0} videos</p>
+                          </div>
+                        </div>
+                        <FaChevronDown className={`text-gray-400 transition-transform ${expandedChapter === chIdx ? 'rotate-180' : ''}`} />
+                      </button>
+                      {expandedChapter === chIdx && (
+                        <div className="px-4 pb-4 border-t pt-3 bg-gray-50 space-y-2">
+                          {ch.videos?.map((video, vIdx) => (
+                            <div key={vIdx} className="flex items-center justify-between bg-white rounded-xl px-4 py-2.5 border">
+                              <div className="flex items-center gap-3">
+                                <FaPlay className="text-blue-500 text-xs" />
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">{video.title || `Video ${vIdx + 1}`}</p>
+                                  {video.duration && <p className="text-xs text-gray-400">{video.duration}</p>}
+                                </div>
+                              </div>
+                              {video.url && (
+                                <a href={video.url} target="_blank" rel="noopener noreferrer"
+                                  className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                                  <FaPlay className="text-[10px]" /> Watch
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                          {ch.pdfUrl && (
+                            <a href={ch.pdfUrl} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-sm text-green-600 hover:underline px-1">
+                              <FaDownload className="text-xs" /> Download Notes PDF
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : course.lessons?.length > 0 ? (
                 <div className="space-y-2">
                   {course.lessons.map((lesson, i) => (
                     <div key={i} className="border rounded-xl overflow-hidden">

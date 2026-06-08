@@ -55,12 +55,7 @@ router.get('/dashboard', cacheMiddleware({ ttl: 30 }), async (req, res) => {
     }));
 
     res.set('Cache-Control', 'private, max-age=30');
-    const slimCourses = allCourses.map(({ chapters, ...rest }) => {
-      if (rest.thumbnail && typeof rest.thumbnail === 'string' && rest.thumbnail.startsWith('data:')) {
-        rest.thumbnail = '';
-      }
-      return rest;
-    });
+    const slimCourses = allCourses.map(({ chapters, ...rest }) => rest);
     res.json({
       totalStudents: studentsCount,
       totalCourses: coursesCount,
@@ -231,7 +226,10 @@ router.put('/courses/:id', async (req, res) => {
 
 router.delete('/courses/:id', async (req, res) => {
   try {
-    await req.db.courses.remove({ _id: req.params.id }, {});
+    const result = await req.db.courses.remove({ _id: req.params.id }, {});
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
     invalidateByPattern('/api/courses');
     invalidateByPattern('/api/admin/dashboard');
     res.json({ message: 'Course deleted' });
@@ -269,6 +267,16 @@ router.patch('/students/:id/block', async (req, res) => {
     if (!user || user.role !== 'student') return res.status(404).json({ message: 'Student not found' });
     await req.db.users.update({ _id: req.params.id }, { $set: { blocked: !user.blocked } });
     res.json({ message: 'Updated' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+router.delete('/students/:id', async (req, res) => {
+  try {
+    const user = await req.db.users.findOne({ _id: req.params.id });
+    if (!user || user.role !== 'student') return res.status(404).json({ message: 'Student not found' });
+    await req.db.users.remove({ _id: req.params.id }, {});
+    await req.db.refreshTokens.remove({ userId: req.params.id }, { multi: true });
+    res.json({ message: 'Student deleted' });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
@@ -326,6 +334,15 @@ router.get('/payment-requests', cacheMiddleware({ ttl: 20 }), async (req, res) =
       });
     }
     res.json(result);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+router.delete('/payments/:id', async (req, res) => {
+  try {
+    const payment = await req.db.payments.findOne({ _id: req.params.id });
+    if (!payment) return res.status(404).json({ message: 'Payment not found' });
+    await req.db.payments.remove({ _id: req.params.id }, {});
+    res.json({ message: 'Payment deleted' });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
