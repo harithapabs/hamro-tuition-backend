@@ -35,7 +35,7 @@ function getYouTubeEmbedUrl(url) {
       videoId = u.searchParams.get('v') || '';
     }
     if (!videoId) return url;
-    return `https://www.youtube.com/embed/${videoId}?controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&playsinline=1`;
+    return `https://www.youtube-nocookie.com/embed/${videoId}?controls=1&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
   } catch { return url; }
 }
 
@@ -256,12 +256,9 @@ const WatchVideo = () => {
   useEffect(() => {
     const container = playerContainerRef.current;
     if (!container) return;
-    const stripAllowFullscreen = () => {
-      const iframe = container.querySelector('iframe');
-      if (iframe) {
-        iframe.setAttribute('allowfullscreen', 'false');
-        iframe.setAttribute('webkitallowfullscreen', 'false');
-        iframe.setAttribute('mozallowfullscreen', 'false');
+    const ensurePlaysinline = () => {
+      const iframes = container.querySelectorAll('iframe');
+      iframes.forEach(iframe => {
         try {
           const src = iframe.getAttribute('src') || '';
           if (!/playsinline=1/.test(src)) {
@@ -269,10 +266,10 @@ const WatchVideo = () => {
             iframe.setAttribute('src', `${src}${sep}playsinline=1`);
           }
         } catch {}
-      }
+      });
     };
-    stripAllowFullscreen();
-    const observer = new MutationObserver(stripAllowFullscreen);
+    ensurePlaysinline();
+    const observer = new MutationObserver(ensurePlaysinline);
     observer.observe(container, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, [currentLesson?._id]);
@@ -420,10 +417,10 @@ const WatchVideo = () => {
                   onEnded={() => setPlaying(false)}
                   config={{
                     youtube: {
-                      playerVars: { modestbranding: 1, rel: 0, iv_load_policy: 3, controls: 0, disablekb: 1, fs: 0, playsinline: 1, enablejsapi: 1 },
+                      playerVars: { modestbranding: 1, rel: 0, iv_load_policy: 3, controls: 1, playsinline: 1, enablejsapi: 1, origin: window.location.origin },
                     },
                   }}
-                  style={{ pointerEvents: 'none' }}
+                  style={{ pointerEvents: playing ? 'auto' : 'none' }}
                   className="react-player"
                 />
               )}
@@ -444,6 +441,11 @@ const WatchVideo = () => {
                   </div>
                 </button>
               )}
+
+              <button onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+                className="absolute top-3 right-3 z-30 text-white/80 hover:text-white bg-black/40 hover:bg-black/60 rounded-lg p-2 transition-all backdrop-blur-sm">
+                {isFullscreen ? <FiMinimize2 size={18} /> : <FiMaximize2 size={18} />}
+              </button>
 
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent px-3 pb-4 pt-10 z-20">
                 <input type="range" min={0} max={1} step={0.001} value={played}
@@ -475,9 +477,6 @@ const WatchVideo = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="bg-black text-white text-sm font-extrabold tracking-wider px-4 py-1.5 rounded-lg shadow-lg">Hamro Tuition</span>
-                    <button onClick={toggleFullscreen} className="text-white/70 hover:text-white transition-colors">
-                      {isFullscreen ? <FiMinimize2 size={14} /> : <FiMaximize2 size={14} />}
-                    </button>
                   </div>
                 </div>
               </div>

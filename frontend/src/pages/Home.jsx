@@ -163,7 +163,7 @@ const Home = ({ onLoginClick }) => {
     const fetchData = async () => {
       try {
         const { data: courses } = await courseAPI.getAll();
-        if (courses?.length >= 4) setFeaturedCourses(courses.slice(0, 6));
+        if (courses?.length > 0) setFeaturedCourses(courses.slice(0, 6));
       } catch {}
       try {
         const { data } = await noticeAPI.getAll();

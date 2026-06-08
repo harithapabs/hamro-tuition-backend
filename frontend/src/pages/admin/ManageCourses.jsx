@@ -129,7 +129,7 @@ const ManageCourses = () => {
                   <td className="py-3 px-4 text-gray-600">{course.instructor}</td>
                   <td className="py-3 px-4"><span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">{course.category}</span></td>
                   <td className="py-3 px-4 text-gray-900 font-medium">Rs. {course.price?.toLocaleString() || 0}</td>
-                  <td className="py-3 px-4 text-gray-600">{course.chapters?.length || course.lessons?.length || 0} Ch</td>
+                  <td className="py-3 px-4 text-gray-600">{course.chapters?.length || 0} Ch, {(course.chapters || []).reduce((sum, ch) => sum + (ch.videos?.length || 0), 0)} V</td>
                   <td className="py-3 px-4">
                     <button
                       onClick={() => handleToggleActive(course)}
