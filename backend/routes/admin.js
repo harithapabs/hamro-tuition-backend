@@ -230,7 +230,7 @@ router.put('/courses/:id', async (req, res) => {
 router.delete('/courses/:id', async (req, res) => {
   try {
     const result = await req.db.courses.remove({ _id: req.params.id }, {});
-    if (result.deletedCount === 0) {
+    if ((result.numRemoved || result.deletedCount || 0) === 0) {
       return res.status(404).json({ message: 'Course not found' });
     }
     invalidateByPattern('/api/courses');
