@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FiSearch, FiUsers, FiUserCheck, FiUserX, FiChevronDown, FiChevronUp,
+  FiSearch, FiUsers, FiUserCheck, FiUserX, FiChevronDown, FiChevronUp, FiTrash2,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { adminAPI } from '../../utils/api';
@@ -12,6 +12,7 @@ const ManageStudents = () => {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [showDelete, setShowDelete] = useState(null);
 
   const fetchStudents = async () => {
     try {
@@ -29,6 +30,16 @@ const ManageStudents = () => {
       toast.success(`Student ${currentBlocked ? 'unblocked' : 'blocked'}`);
       fetchStudents();
     } catch { toast.error('Failed to update'); }
+  };
+
+  const handleDelete = async () => {
+    if (!showDelete) return;
+    try {
+      await adminAPI.deleteStudent(showDelete);
+      toast.success('Student deleted');
+      setShowDelete(null);
+      fetchStudents();
+    } catch { toast.error('Failed to delete student'); }
   };
 
   const filtered = students.filter((s) => {
@@ -128,16 +139,24 @@ const ManageStudents = () => {
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleBlock(student._id, student.isBlocked); }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-                        student.isBlocked
-                          ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                          : 'bg-red-50 text-red-700 hover:bg-red-100'
-                      }`}
-                    >
-                      {student.isBlocked ? 'Unblock' : 'Block'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleBlock(student._id, student.isBlocked); }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+                          student.isBlocked
+                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                            : 'bg-red-50 text-red-700 hover:bg-red-100'
+                        }`}
+                      >
+                        {student.isBlocked ? 'Unblock' : 'Block'}
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setShowDelete(student._id); }}
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <FiTrash2 size={15} />
+                      </button>
+                    </div>
                   </td>
                 </motion.tr>
               ))}
@@ -178,6 +197,27 @@ const ManageStudents = () => {
           </motion.div>
         );
       })()}
+      <AnimatePresence>
+        {showDelete && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          >
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl text-center"
+            >
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                <FiTrash2 className="text-red-600 text-xl" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Delete Student?</h3>
+              <p className="text-sm text-gray-500 mt-1">This will permanently remove the student and their data.</p>
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => setShowDelete(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
+                <button onClick={handleDelete} className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors">Delete</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -147,6 +147,7 @@ const Payments = () => {
           totalRevenue={totalRevenue} completedCount={completedCount}
           pendingCount={pendingCount} rejectedCount={rejectedCount}
           barLabels={barLabels} barValues={barValues}
+          setPayments={setPayments}
         />
       )}
 
@@ -163,7 +164,26 @@ const OverviewTab = ({
   payments, loading, filtered, search, setSearch, dateFrom, setDateFrom,
   dateTo, setDateTo, statusFilter, setStatusFilter, handleFilter,
   totalRevenue, completedCount, pendingCount, rejectedCount, barLabels, barValues,
+  setPayments,
 }) => {
+  const [showDelete, setShowDelete] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
+
+  const handleDelete = async () => {
+    if (!showDelete) return;
+    setActionLoading(showDelete);
+    try {
+      await adminAPI.deletePayment(showDelete);
+      toast.success('Payment deleted');
+      setPayments(prev => prev.filter(p => p._id !== showDelete));
+      setShowDelete(null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete payment');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const statusCounts = {
     all: payments.length,
     pending: payments.filter(p => p.status === 'pending').length,
@@ -264,13 +284,14 @@ const OverviewTab = ({
                 <th className="text-left py-3 px-4 text-gray-500 font-medium">Method</th>
                 <th className="text-left py-3 px-4 text-gray-500 font-medium">Status</th>
                 <th className="text-left py-3 px-4 text-gray-500 font-medium">Date</th>
+                <th className="text-left py-3 px-4 text-gray-500 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="text-center py-12"><div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto" /></td></tr>
+                <tr><td colSpan={7} className="text-center py-12"><div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto" /></td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-12 text-gray-400">No payments found</td></tr>
+                <tr><td colSpan={7} className="text-center py-12 text-gray-400">No payments found</td></tr>
               ) : filtered.map((p, i) => (
                 <tr key={i} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="py-3 px-4 text-gray-900 font-medium">{p.user?.name || p.studentName || '-'}</td>
@@ -291,12 +312,40 @@ const OverviewTab = ({
                     }`}>{p.status || 'N/A'}</span>
                   </td>
                   <td className="py-3 px-4 text-gray-500">{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-'}</td>
+                  <td className="py-3 px-4">
+                    <button onClick={() => setShowDelete(p._id)}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <FiTrash2 size={15} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </motion.div>
+      <AnimatePresence>
+        {showDelete && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          >
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl text-center"
+            >
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                <FiTrash2 className="text-red-600 text-xl" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Delete Payment?</h3>
+              <p className="text-sm text-gray-500 mt-1">Revenue will update automatically.</p>
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => setShowDelete(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
+                <button onClick={handleDelete} disabled={actionLoading === showDelete}
+                  className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50">Delete</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
@@ -309,6 +358,7 @@ const RequestsTab = ({ payments, loading, setPayments }) => {
   const [rejectModal, setRejectModal] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
+  const [showDelete, setShowDelete] = useState(null);
 
   const handleApprove = async (id) => {
     setActionLoading(id);
@@ -346,6 +396,21 @@ const RequestsTab = ({ payments, loading, setPayments }) => {
       setRejectReason('');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to reject');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!showDelete) return;
+    setActionLoading(showDelete);
+    try {
+      await adminAPI.deletePayment(showDelete);
+      toast.success('Payment deleted');
+      setPayments(payments.filter(p => p._id !== showDelete));
+      setShowDelete(null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete payment');
     } finally {
       setActionLoading(null);
     }
@@ -486,22 +551,28 @@ const RequestsTab = ({ payments, loading, setPayments }) => {
                     {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-'}
                   </td>
                   <td className="py-3 px-4">
-                    {p.status === 'pending' ? (
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => handleApprove(p._id)} disabled={actionLoading === p._id}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50">
-                          <FiCheck className="text-sm" /> Approve
-                        </button>
-                        <button onClick={() => setRejectModal(p._id)} disabled={actionLoading === p._id}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white text-xs font-medium rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50">
-                          <FiX className="text-sm" /> Reject
-                        </button>
-                      </div>
-                    ) : p.status === 'approved' || p.status === 'completed' ? (
-                      <span className="text-emerald-600 text-xs font-medium flex items-center gap-1"><FiCheckCircle /> Done</span>
-                    ) : (
-                      <span className="text-red-600 text-xs font-medium flex items-center gap-1"><FiXCircle /> Rejected</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {p.status === 'pending' ? (
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleApprove(p._id)} disabled={actionLoading === p._id}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50">
+                            <FiCheck className="text-sm" /> Approve
+                          </button>
+                          <button onClick={() => setRejectModal(p._id)} disabled={actionLoading === p._id}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white text-xs font-medium rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50">
+                            <FiX className="text-sm" /> Reject
+                          </button>
+                        </div>
+                      ) : p.status === 'approved' || p.status === 'completed' ? (
+                        <span className="text-emerald-600 text-xs font-medium flex items-center gap-1"><FiCheckCircle /> Done</span>
+                      ) : (
+                        <span className="text-red-600 text-xs font-medium flex items-center gap-1"><FiXCircle /> Rejected</span>
+                      )}
+                      <button onClick={() => setShowDelete(p._id)}
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-auto">
+                        <FiTrash2 size={15} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -618,6 +689,29 @@ const RequestsTab = ({ payments, loading, setPayments }) => {
                     <FiX /> Reject
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showDelete && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          >
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl text-center"
+            >
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                <FiTrash2 className="text-red-600 text-xl" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Delete Payment?</h3>
+              <p className="text-sm text-gray-500 mt-1">This action cannot be undone.</p>
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => setShowDelete(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
+                <button onClick={handleDelete} disabled={actionLoading === showDelete}
+                  className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50">Delete</button>
               </div>
             </motion.div>
           </motion.div>

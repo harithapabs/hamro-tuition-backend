@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authAPI } from '../utils/api';
+import { authAPI, setStoredToken } from '../utils/api';
 
 const AuthContext = createContext({
   user: null,
@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }) => {
         setRequires2FA({ twoFactorToken: data.twoFactorToken });
         return { requires2FA: true };
       }
+      if (data?.token) setStoredToken(data.token);
       setUser(data?.user || null);
       return data?.user || null;
     } catch (err) {
@@ -57,6 +58,7 @@ export const AuthProvider = ({ children }) => {
         return { requires2FA: true };
       }
       setRequires2FA(null);
+      if (data?.token) setStoredToken(data.token);
       setUser(data?.user || null);
       return data?.user || null;
     } catch (err) {
@@ -67,6 +69,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (form) => {
     try {
       const { data } = await authAPI.register(form);
+      if (data?.token) setStoredToken(data.token);
       setUser(data?.user || null);
       return data?.user || null;
     } catch (err) {
@@ -76,6 +79,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try { await authAPI.logout(); } catch {}
+    setStoredToken(null);
     setUser(null);
     setRequires2FA(null);
   };

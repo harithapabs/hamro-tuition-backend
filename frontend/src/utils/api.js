@@ -1,5 +1,16 @@
 import axios from 'axios';
 
+const TOKEN_KEY = 'ht_token';
+
+export function getStoredToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setStoredToken(token) {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+}
+
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: true
@@ -12,6 +23,8 @@ function getCsrfToken() {
 
 API.interceptors.request.use((config) => {
   const method = (config.method || 'get').toLowerCase();
+  const token = getStoredToken();
+  if (token) config.headers['Authorization'] = `Bearer ${token}`;
   if (!['get', 'head', 'options'].includes(method)) {
     const t = getCsrfToken();
     if (t) config.headers['X-CSRF-Token'] = t;
@@ -26,7 +39,8 @@ API.interceptors.response.use(
     if (err.response?.status === 401 && !original._retry && !original.url.includes('/auth/')) {
       original._retry = true;
       try {
-        await API.post('/auth/refresh');
+        const { data } = await API.post('/auth/refresh');
+        if (data?.token) setStoredToken(data.token);
         return API(original);
       } catch (refreshErr) {
         const path = window.location.pathname;
@@ -89,10 +103,12 @@ export const adminAPI = {
   wizardUpdateCourse: (id, data) => API.put(`/admin/courses/${id}/wizard`, data),
   getStudents: (params) => API.get('/admin/students', { params }),
   blockStudent: (id, data) => API.patch(`/admin/students/${id}/block`, data),
+  deleteStudent: (id) => API.delete(`/admin/students/${id}`),
   getPayments: (params) => API.get('/admin/payments', { params }),
   getPaymentRequests: () => API.get('/admin/payment-requests'),
   approvePayment: (id) => API.patch(`/admin/payments/${id}/approve`),
   rejectPayment: (id, data) => API.patch(`/admin/payments/${id}/reject`, data),
+  deletePayment: (id) => API.delete(`/admin/payments/${id}`),
   approveReview: (id) => API.patch(`/admin/reviews/${id}/approve`),
   deleteReview: (id) => API.delete(`/admin/reviews/${id}`),
   getPaymentSettings: () => API.get('/payment-settings'),

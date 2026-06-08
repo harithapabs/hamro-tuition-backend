@@ -10,15 +10,32 @@ import toast from 'react-hot-toast';
 import ReactPlayer from 'react-player';
 import { courseAPI, studentAPI } from '../../utils/api';
 
-function getYouTubeEmbedUrl(url) {
-  if (!url || !url.includes('youtube')) return url;
+function getGoogleDriveFileId(url) {
+  if (!url || !url.includes('drive.google.com')) return null;
   try {
     const u = new URL(url);
-    u.searchParams.set('controls', '0');
-    u.searchParams.set('modestbranding', '1');
-    u.searchParams.set('rel', '0');
-    u.searchParams.set('iv_load_policy', '3');
-    return u.toString();
+    const match1 = u.pathname.match(/\/file\/d\/([^/]+)/);
+    if (match1) return match1[1];
+    const id = u.searchParams.get('id');
+    if (id) return id;
+    const match2 = u.pathname.match(/\/uc\?.*id=([^&]+)/);
+    if (match2) return match2[1];
+  } catch {}
+  return null;
+}
+
+function getYouTubeEmbedUrl(url) {
+  if (!url || (!url.includes('youtube') && !url.includes('youtu.be'))) return url;
+  try {
+    let videoId = '';
+    if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1]?.split('?')[0]?.split('/')[0] || '';
+    } else {
+      const u = new URL(url);
+      videoId = u.searchParams.get('v') || '';
+    }
+    if (!videoId) return url;
+    return `https://www.youtube.com/embed/${videoId}?controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&playsinline=1`;
   } catch { return url; }
 }
 
@@ -229,6 +246,13 @@ const WatchVideo = () => {
     };
   }, []);
 
+  const allVideos = getAllVideos(chapters);
+  const currentIndex = allVideos.findIndex(v => v._id === lessonId);
+  const currentLesson = allVideos[currentIndex] || allVideos[0];
+  const prevLesson = currentIndex > 0 ? allVideos[currentIndex - 1] : null;
+  const nextLesson = currentIndex < allVideos.length - 1 ? allVideos[currentIndex + 1] : null;
+  const stats = getChapterStats(chapters);
+
   useEffect(() => {
     const container = playerContainerRef.current;
     if (!container) return;
@@ -252,13 +276,6 @@ const WatchVideo = () => {
     observer.observe(container, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, [currentLesson?._id]);
-
-  const allVideos = getAllVideos(chapters);
-  const currentIndex = allVideos.findIndex(v => v._id === lessonId);
-  const currentLesson = allVideos[currentIndex] || allVideos[0];
-  const prevLesson = currentIndex > 0 ? allVideos[currentIndex - 1] : null;
-  const nextLesson = currentIndex < allVideos.length - 1 ? allVideos[currentIndex + 1] : null;
-  const stats = getChapterStats(chapters);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -286,7 +303,7 @@ const WatchVideo = () => {
       }
     };
     if (courseId) fetchCourse();
-  }, [courseId, lessonId]);
+  }, [courseId]);
 
   useEffect(() => {
     if (currentLesson) {
@@ -366,6 +383,8 @@ const WatchVideo = () => {
     );
   }
 
+  const gdriveFileId = currentLesson?.url ? getGoogleDriveFileId(currentLesson.url) : null;
+
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-full">
       {/* Left: Video Player */}
@@ -373,30 +392,42 @@ const WatchVideo = () => {
         <div ref={playerContainerRef} className="bg-black rounded-2xl overflow-hidden relative group" style={{ aspectRatio: '16/9' }}>
           {currentLesson?.url ? (
             <>
-              <ReactPlayer
-                key={currentLesson._id}
-                ref={playerRef}
-                url={getYouTubeEmbedUrl(currentLesson.url)}
-                width="100%"
-                height="100%"
-                playing={playing}
-                volume={volume}
-                muted={muted}
-                onProgress={handleProgress}
-                onDuration={handleDuration}
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                onEnded={() => setPlaying(false)}
-                config={{
-                  youtube: {
-                    playerVars: { modestbranding: 1, rel: 0, iv_load_policy: 3, controls: 0, disablekb: 1, fs: 0, playsinline: 1, enablejsapi: 1 },
-                  },
-                }}
-                style={{ pointerEvents: 'none' }}
-                className="react-player"
-              />
+              {gdriveFileId ? (
+                <iframe
+                  key={currentLesson._id}
+                  src={`https://drive.google.com/file/d/${gdriveFileId}/preview`}
+                  width="100%"
+                  height="100%"
+                  allow="autoplay"
+                  allowFullScreen={false}
+                  frameBorder="0"
+                  className="absolute inset-0 w-full h-full"
+                />
+              ) : (
+                <ReactPlayer
+                  key={currentLesson._id}
+                  ref={playerRef}
+                  url={getYouTubeEmbedUrl(currentLesson.url)}
+                  width="100%"
+                  height="100%"
+                  playing={playing}
+                  volume={volume}
+                  muted={muted}
+                  onProgress={handleProgress}
+                  onDuration={handleDuration}
+                  onPlay={() => setPlaying(true)}
+                  onPause={() => setPlaying(false)}
+                  onEnded={() => setPlaying(false)}
+                  config={{
+                    youtube: {
+                      playerVars: { modestbranding: 1, rel: 0, iv_load_policy: 3, controls: 0, disablekb: 1, fs: 0, playsinline: 1, enablejsapi: 1 },
+                    },
+                  }}
+                  style={{ pointerEvents: 'none' }}
+                  className="react-player"
+                />
+              )}
 
-              {/* Transparent click-blocker so iframe can't capture taps and open YouTube */}
               <div
                 onClick={(e) => { e.stopPropagation(); handlePlayPause(); }}
                 onTouchStart={(e) => { e.stopPropagation(); }}
@@ -405,7 +436,6 @@ const WatchVideo = () => {
                 aria-label="Tap to play/pause"
               />
 
-              {/* Center play button overlay */}
               {!playing && (
                 <button onClick={handlePlayPause}
                   className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity z-10">
@@ -415,9 +445,7 @@ const WatchVideo = () => {
                 </button>
               )}
 
-              {/* Custom Controls Bar */}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent px-3 pb-4 pt-10 z-20">
-                {/* Progress bar */}
                 <input type="range" min={0} max={1} step={0.001} value={played}
                   onMouseDown={handleSeekMouseDown} onMouseUp={handleSeekMouseUp}
                   onTouchStart={handleSeekMouseDown} onTouchEnd={handleSeekMouseUp}
@@ -455,6 +483,13 @@ const WatchVideo = () => {
               </div>
             </>
           ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-900">
+              <div className="text-center">
+                <FiPlay className="text-white/30 text-6xl mx-auto mb-4" />
+                <p className="text-white/60 text-sm">Video not available</p>
+              </div>
+            </div>
+          )}
             <div className="w-full h-full flex items-center justify-center bg-gray-900">
               <div className="text-center">
                 <FiPlay className="text-white/30 text-6xl mx-auto mb-4" />
