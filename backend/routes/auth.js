@@ -131,7 +131,7 @@ router.post('/register', async (req, res) => {
     const { password: _, ...userData } = user;
     sendWelcomeEmail(userData);
     logAction(req, { userId: user._id, action: 'user.register', target: user._id });
-    res.status(201).json({ user: userData, csrfToken: newCsrfToken() });
+    res.status(201).json({ user: userData, csrfToken: newCsrfToken(), token });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
@@ -187,7 +187,7 @@ router.post('/login', async (req, res) => {
     await issueRefreshToken(req, res, user._id);
     const { password: _, ...userData } = user;
     logAction(req, { userId: user._id, action: 'user.login', target: user._id, metadata: { endedOtherSession: hadPreviousSession } });
-    res.json({ user: userData, csrfToken: newCsrfToken() });
+    res.json({ user: userData, csrfToken: newCsrfToken(), token });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
@@ -297,7 +297,7 @@ router.post('/refresh', async (req, res) => {
       await req.db.users.update({ _id: user._id }, { $set: { currentSessionId: jti } });
     }
     setAuthCookie(req, res, newJwt);
-    res.json({ csrfToken: newCsrfToken() });
+    res.json({ csrfToken: newCsrfToken(), token: newJwt });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
