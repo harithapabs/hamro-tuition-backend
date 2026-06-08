@@ -169,23 +169,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.get('/api/diag', async (req, res) => {
-  const results = { db: !!req.db, collections: {} };
-  try {
-    await req.db.users.findOne({});
-    results.collections.users = 'ok';
-  } catch (e) { results.collections.users = e.message; }
-  try {
-    await req.db.refreshTokens.insert({ test: true, createdAt: new Date().toISOString() });
-    results.collections.refreshTokens = 'insert ok';
-  } catch (e) { results.collections.refreshTokens = e.message; }
-  try {
-    await req.db.auditLogs.insert({ test: true, createdAt: new Date().toISOString() });
-    results.collections.auditLogs = 'insert ok';
-  } catch (e) { results.collections.auditLogs = e.message; }
-  res.json(results);
-});
-
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
   index: false,
   setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff')
@@ -212,14 +195,12 @@ if (process.env.SENTRY_DSN) {
 }
 
 app.use((err, req, res, next) => {
-  console.error('GLOBAL ERROR:', err);
+  console.error(err.stack);
   if (err.message && err.message.startsWith('CORS:')) {
     return res.status(403).json({ message: 'Origin not allowed' });
   }
   res.status(err.status || 500).json({
-    message: process.env.NODE_ENV === 'production' ? 'Internal server error' : (err.message || 'Internal server error'),
-    _debug: err.message || String(err),
-    _type: err.constructor?.name || 'Error'
+    message: process.env.NODE_ENV === 'production' ? 'Internal server error' : (err.message || 'Internal server error')
   });
 });
 
