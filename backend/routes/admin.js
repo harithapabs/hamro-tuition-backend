@@ -55,7 +55,10 @@ router.get('/dashboard', cacheMiddleware({ ttl: 30 }), async (req, res) => {
     }));
 
     res.set('Cache-Control', 'private, max-age=30');
-    const slimCourses = allCourses.map(({ chapters, ...rest }) => rest);
+    const slimCourses = allCourses.map(course => {
+      const { thumbnail, ...rest } = course;
+      return { ...rest, thumbnail: thumbnail && thumbnail.length > 200 ? thumbnail.substring(0, 100) + '...DATA' : thumbnail };
+    });
     res.json({
       totalStudents: studentsCount,
       totalCourses: coursesCount,
