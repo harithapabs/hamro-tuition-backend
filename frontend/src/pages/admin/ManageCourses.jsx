@@ -4,7 +4,7 @@ import {
   FiPlus, FiSearch, FiEdit2, FiTrash2, FiChevronDown, FiChevronUp, FiBook, FiLayers,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { adminAPI } from '../../utils/api';
+import { adminAPI, courseAPI } from '../../utils/api';
 import CourseWizard from './CourseWizard';
 
 const ManageCourses = () => {
@@ -38,8 +38,13 @@ const ManageCourses = () => {
     setShowWizard(true);
   };
 
-  const openEdit = (course) => {
-    setEditCourse(course);
+  const openEdit = async (course) => {
+    try {
+      const { data: fullCourse } = await courseAPI.getOne(course._id);
+      setEditCourse(fullCourse);
+    } catch {
+      setEditCourse(course);
+    }
     setShowWizard(true);
   };
 

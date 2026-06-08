@@ -33,29 +33,9 @@ export default defineConfig({
         clientsClaim: true,
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.pathname.startsWith('/api/courses'),
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-courses',
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
-              networkTimeoutSeconds: 8
-            }
-          },
-          {
-            urlPattern: ({ url }) => url.pathname.startsWith('/api/admin'),
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'api-admin',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 }
-            }
-          },
-          {
-            urlPattern: ({ url }) => url.pathname.startsWith('/api/student'),
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'api-student',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 }
-            }
+            urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
+            handler: 'NetworkOnly',
+            options: {}
           },
           {
             urlPattern: ({ request }) => request.destination === 'image',
