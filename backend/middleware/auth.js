@@ -10,14 +10,18 @@ const COOKIE_NAME = 'ht_token';
 const CSRF_COOKIE = 'ht_csrf';
 const REFRESH_COOKIE = 'ht_refresh';
 
-const isProduction = process.env.NODE_ENV === 'production';
-const cookieOptions = {
-  httpOnly: true,
-  sameSite: isProduction ? 'none' : 'lax',
-  secure: isProduction,
-  path: '/',
-  maxAge: 7 * 24 * 60 * 60 * 1000
-};
+function getCookieOptions(req) {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const host = req?.hostname || '';
+  const isSameSite = host.endsWith('hamrotuition.com') || !isProduction;
+  return {
+    httpOnly: true,
+    sameSite: isSameSite ? 'lax' : 'none',
+    secure: isProduction,
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  };
+}
 
 function cookieParserMiddleware() {
   return cookies();
@@ -45,30 +49,29 @@ function refreshSignToken(user, jti) {
   return { token, jti, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 };
 }
 
-function setAuthCookie(res, token) {
-  res.cookie(COOKIE_NAME, token, cookieOptions);
+function setAuthCookie(req, res, token) {
+  const opts = getCookieOptions(req);
+  res.cookie(COOKIE_NAME, token, opts);
 }
 
-function clearAuthCookie(res) {
-  res.clearCookie(COOKIE_NAME, cookieOptions);
+function clearAuthCookie(req, res) {
+  const opts = getCookieOptions(req);
+  res.clearCookie(COOKIE_NAME, opts);
 }
 
-function setCsrfCookie(res, token) {
-  res.cookie(CSRF_COOKIE, token, {
-    ...cookieOptions,
-    httpOnly: false
-  });
+function setCsrfCookie(req, res, token) {
+  const opts = getCookieOptions(req);
+  res.cookie(CSRF_COOKIE, token, { ...opts, httpOnly: false });
 }
 
-function setRefreshCookie(res, token) {
-  res.cookie(REFRESH_COOKIE, token, {
-    ...cookieOptions,
-    maxAge: 30 * 24 * 60 * 60 * 1000
-  });
+function setRefreshCookie(req, res, token) {
+  const opts = getCookieOptions(req);
+  res.cookie(REFRESH_COOKIE, token, { ...opts, maxAge: 30 * 24 * 60 * 60 * 1000 });
 }
 
-function clearRefreshCookie(res) {
-  res.clearCookie(REFRESH_COOKIE, cookieOptions);
+function clearRefreshCookie(req, res) {
+  const opts = getCookieOptions(req);
+  res.clearCookie(REFRESH_COOKIE, opts);
 }
 
 function newCsrfToken() {

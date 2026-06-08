@@ -85,7 +85,7 @@ app.use(cookieParserMiddleware());
 app.use((req, res, next) => {
   if (!req.cookies?.ht_csrf) {
     const token = newCsrfToken();
-    setCsrfCookie(res, token);
+    setCsrfCookie(req, res, token);
   }
   next();
 });

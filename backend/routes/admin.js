@@ -179,6 +179,9 @@ router.post('/courses', async (req, res) => {
       await req.db.notifications.insert({ ...notification, userId: student._id });
     }
 
+    invalidateByPattern('/api/courses');
+    invalidateByPattern('/api/admin/dashboard');
+
     res.status(201).json(course);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -203,6 +206,10 @@ router.put('/courses/:id/wizard', async (req, res) => {
     await req.db.courses.remove({ _id: req.params.id }, {});
     await req.db.courses.insert({ _id: req.params.id, ...courseData });
     const course = await req.db.courses.findOne({ _id: req.params.id });
+
+    invalidateByPattern('/api/courses');
+    invalidateByPattern('/api/admin/dashboard');
+
     res.json(course);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -214,6 +221,10 @@ router.put('/courses/:id', async (req, res) => {
     await req.db.courses.remove({ _id: req.params.id }, {});
     await req.db.courses.insert({ _id: req.params.id, ...existing, ...req.body, updatedAt: new Date().toISOString() });
     const course = await req.db.courses.findOne({ _id: req.params.id });
+
+    invalidateByPattern('/api/courses');
+    invalidateByPattern('/api/admin/dashboard');
+
     res.json(course);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -221,6 +232,8 @@ router.put('/courses/:id', async (req, res) => {
 router.delete('/courses/:id', async (req, res) => {
   try {
     await req.db.courses.remove({ _id: req.params.id }, {});
+    invalidateByPattern('/api/courses');
+    invalidateByPattern('/api/admin/dashboard');
     res.json({ message: 'Course deleted' });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -232,6 +245,8 @@ router.post('/courses/:id/lessons', async (req, res) => {
     const lessons = course.lessons || [];
     lessons.push({ ...req.body, _id: require('crypto').randomUUID() });
     await req.db.courses.update({ _id: req.params.id }, { $set: { lessons } });
+    invalidateByPattern('/api/courses');
+    invalidateByPattern('/api/admin/dashboard');
     res.json(await req.db.courses.findOne({ _id: req.params.id }));
   } catch (err) { res.status(500).json({ message: err.message }); }
 });

@@ -49,7 +49,7 @@ async function issueRefreshToken(req, res, userId) {
     userAgent: req.headers['user-agent'] || '',
     ip: req.ip
   });
-  setRefreshCookie(res, raw);
+  setRefreshCookie(req, res, raw);
   return raw;
 }
 
@@ -126,7 +126,7 @@ router.post('/register', async (req, res) => {
     sendVerificationEmail({ ...user, verificationToken });
 
     const { token } = await signToken(req, { ...user, emailVerified: false });
-    setAuthCookie(res, token);
+    setAuthCookie(req, res, token);
     await issueRefreshToken(req, res, user._id);
     const { password: _, ...userData } = user;
     sendWelcomeEmail(userData);
@@ -183,7 +183,7 @@ router.post('/login', async (req, res) => {
 
     const hadPreviousSession = !!user.currentSessionId;
     const { token } = await signToken(req, user);
-    setAuthCookie(res, token);
+    setAuthCookie(req, res, token);
     await issueRefreshToken(req, res, user._id);
     const { password: _, ...userData } = user;
     logAction(req, { userId: user._id, action: 'user.login', target: user._id, metadata: { endedOtherSession: hadPreviousSession } });
@@ -207,8 +207,8 @@ router.post('/logout', async (req, res) => {
         }
       } catch {}
     }
-    clearAuthCookie(res);
-    clearRefreshCookie(res);
+    clearAuthCookie(req, res);
+    clearRefreshCookie(req, res);
     if (req.cookies?.[COOKIE_NAME]) {
       try {
         const decoded = jwt.verify(req.cookies[COOKIE_NAME], process.env.JWT_SECRET);
@@ -296,7 +296,7 @@ router.post('/refresh', async (req, res) => {
     if (!user.currentSessionId) {
       await req.db.users.update({ _id: user._id }, { $set: { currentSessionId: jti } });
     }
-    setAuthCookie(res, newJwt);
+    setAuthCookie(req, res, newJwt);
     res.json({ csrfToken: newCsrfToken() });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
