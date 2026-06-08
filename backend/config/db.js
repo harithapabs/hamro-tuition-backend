@@ -29,19 +29,20 @@ if (USE_MONGODB) {
       for (const { model, fields } of idx) {
         try {
           const M = mongoose.model(model);
-          await M.collection.createIndex(fields.reduce((acc, f) => {
+          const indexSpec = {};
+          let indexOptions = { background: true };
+          for (const f of fields) {
             if (typeof f === 'object') {
-              Object.entries(f).forEach(([k, v]) => { if (k !== 'unique' && k !== 'sparse') acc[k] = v; });
-              if (f.unique) acc._unique = true;
-              if (f.sparse) acc._sparse = true;
+              Object.entries(f).forEach(([k, v]) => {
+                if (k === 'unique') indexOptions.unique = true;
+                else if (k === 'sparse') indexOptions.sparse = true;
+                else indexSpec[k] = v;
+              });
             } else {
-              acc[f] = 1;
+              indexSpec[f] = 1;
             }
-            return acc;
-          }, {}), {
-            unique: fields.some(f => typeof f === 'object' && f.unique) || false,
-            background: true,
-          });
+          }
+          await M.collection.createIndex(indexSpec, indexOptions);
         } catch (e) { console.warn(`Index for ${model}:`, e.message); }
       }
     } catch (e) { console.warn('Index setup:', e.message); }
