@@ -13,15 +13,7 @@ router.get('/', cacheMiddleware({ ttl: 120 }), async (req, res) => {
       query.$or = [{ title: re }, { instructor: re }, { description: re }, { category: re }];
     }
     const courses = await req.db.courses.find(query).sort({ createdAt: -1 });
-    const slim = [];
-    for (const course of courses) {
-      const { chapters, ...rest } = course;
-      try {
-        const enrolled = await req.db.enrollments.count({ courseId: course._id, status: { $in: ['active', 'approved', undefined, null, ''] } });
-        rest.students = enrolled;
-      } catch { rest.students = 0; }
-      slim.push(rest);
-    }
+    const slim = courses.map(({ chapters, ...rest }) => rest);
     res.json(slim);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
