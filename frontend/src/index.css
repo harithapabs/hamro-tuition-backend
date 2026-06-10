@@ -57,7 +57,18 @@ input, select, textarea, button { font-size: 16px; }
   50% { transform: translateY(-4px); }
 }
 
-#chatbot-messages::-webkit-scrollbar { width: 4px; }
-#chatbot-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.whatsapp-btn {
+  background-color: #25d366;
+}
+.whatsapp-btn:hover {
+  background-color: #1ebe57;
+}
+.whatsapp-tooltip {
+  animation: fadeInDown 0.3s ease;
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 

@@ -46,7 +46,7 @@ const Referrals = lazy(() => import('./pages/student/Referrals'));
 const CheckoutPage = lazy(() => import('./pages/student/CheckoutPage'));
 const PaymentSuccess = lazy(() => import('./pages/student/PaymentSuccess'));
 const PaymentHistory = lazy(() => import('./pages/student/PaymentHistory'));
-const Chatbot = lazy(() => import('./components/Chatbot'));
+const WhatsAppButton = lazy(() => import('./components/WhatsAppButton'));
 const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
 
 const DashboardRedirect = () => {
@@ -152,7 +152,7 @@ const AppContent = () => {
         </Suspense>
       </main>
       {!isDashboard && !isCheckout && <Footer />}
-      {!isDashboard && <Chatbot />}
+      {!isDashboard && <WhatsAppButton />}
       <InstallPrompt />
       {loginModal && (
         <Suspense fallback={null}>

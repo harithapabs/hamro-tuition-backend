@@ -27,3 +27,6 @@ frontend/node_modules/
 # Secrets
 backend/.env
 frontend/.env
+
+.vercel
+.env*

@@ -87,7 +87,7 @@ router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role, referralCode, captchaId, captchaAnswer } = req.body;
     if (!name || !email || !password) return res.status(400).json({ message: 'All fields required' });
-    if (!checkCaptcha(captchaId, captchaAnswer)) {
+    if (captchaId && !checkCaptcha(captchaId, captchaAnswer)) {
       return res.status(400).json({ message: 'Incorrect captcha answer' });
     }
     if (typeof name !== 'string' || name.trim().length < 2 || name.length > 100) {

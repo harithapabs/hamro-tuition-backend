@@ -21,12 +21,22 @@ const LoginModal = ({ onClose }) => {
   const [captcha, setCaptcha] = useState(null);
   const [captchaAnswer, setCaptchaAnswer] = useState('');
 
-  const loadCaptcha = async () => {
-    try {
-      const { data } = await authAPI.getCaptcha();
-      setCaptcha(data);
-      setCaptchaAnswer('');
-    } catch {}
+  const [captchaError, setCaptchaError] = useState(false);
+
+  const loadCaptcha = async (retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const { data } = await authAPI.getCaptcha();
+        setCaptcha(data);
+        setCaptchaAnswer('');
+        setCaptchaError(false);
+        return;
+      } catch {
+        if (i < retries - 1) await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+    setCaptcha(null);
+    setCaptchaError(true);
   };
 
   useEffect(() => { loadCaptcha(); }, []);
@@ -89,7 +99,7 @@ const LoginModal = ({ onClose }) => {
       errs.password = 'Must include letters and numbers';
     }
     if (signupForm.password !== signupForm.confirmPassword) errs.confirmPassword = 'Passwords do not match';
-    if (!captchaAnswer) errs.captcha = 'Solve the captcha';
+    if (captcha && !captchaAnswer) errs.captcha = 'Solve the captcha';
     return errs;
   };
 
@@ -148,8 +158,8 @@ const LoginModal = ({ onClose }) => {
     try {
       const user = await register({
         ...signupForm,
-        captchaId: captcha?.id,
-        captchaAnswer,
+        captchaId: captcha?.id || null,
+        captchaAnswer: captchaAnswer || null,
       });
       toast.success('Account created! Please verify your email.');
       onClose();
