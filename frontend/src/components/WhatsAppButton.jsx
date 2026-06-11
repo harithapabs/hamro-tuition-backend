@@ -1,33 +1,15 @@
-import { useState, useEffect } from 'react';
-
 const WhatsAppButton = () => {
-  const [showTooltip, setShowTooltip] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowTooltip(true), 3000);
-    const hideTimer = setTimeout(() => setShowTooltip(false), 10000);
-    return () => { clearTimeout(timer); clearTimeout(hideTimer); };
-  }, []);
-
   const phoneNumber = '9779843684295';
   const message = encodeURIComponent('Hello, I am interested in your online tuition classes.');
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {showTooltip && (
-        <div className="whatsapp-tooltip mb-3 bg-white text-gray-800 px-4 py-2 rounded-xl shadow-lg text-sm font-medium relative">
-          Chat with us!
-          <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white transform rotate-45 shadow-lg" />
-        </div>
-      )}
       <a
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="whatsapp-btn flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl"
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
+        className="flex items-center justify-center w-14 h-14 rounded-full shadow-lg bg-green-500 hover:bg-green-600 transition-all duration-300 hover:scale-110"
         aria-label="Chat on WhatsApp"
       >
         <svg viewBox="0 0 32 32" className="w-7 h-7 fill-white">

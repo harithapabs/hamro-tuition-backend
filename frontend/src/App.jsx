@@ -47,7 +47,7 @@ const CheckoutPage = lazy(() => import('./pages/student/CheckoutPage'));
 const PaymentSuccess = lazy(() => import('./pages/student/PaymentSuccess'));
 const PaymentHistory = lazy(() => import('./pages/student/PaymentHistory'));
 const WhatsAppButton = lazy(() => import('./components/WhatsAppButton'));
-const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
+
 
 const DashboardRedirect = () => {
   const { user } = useAuth();
@@ -153,7 +153,6 @@ const AppContent = () => {
       </main>
       {!isDashboard && !isCheckout && <Footer />}
       {!isDashboard && <WhatsAppButton />}
-      <InstallPrompt />
       {loginModal && (
         <Suspense fallback={null}>
           <LoginModal onClose={() => setLoginModal(false)} />
