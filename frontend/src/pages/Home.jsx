@@ -17,21 +17,6 @@ const categories = [
   { key: 'Aayog', title: 'Aayog Tayari', icon: FaBook, subjects: 'Loksewa, Kharidar, Nayab Subba', gradient: 'from-red-400 to-orange-500', desc: 'Civil service prep' },
 ];
 
-const sampleCourses = [
-  { id: 's1', title: 'Science for Class 10 - Complete Guide', category: 'School', instructor: 'Ram Sharma', rating: 4.8, numReviews: 234, price: 2999, students: 1542 },
-  { id: 's2', title: 'Mathematics Mastery - Class 8 & 9', category: 'School', instructor: 'Sita Adhikari', rating: 4.7, numReviews: 189, price: 2499, students: 1287 },
-  { id: 's3', title: '+2 Physics: Mechanics & Waves', category: 'Plus2', instructor: 'Hari Poudel', rating: 4.9, numReviews: 312, price: 3999, students: 2104 },
-  { id: 's4', title: 'English Grammar & Composition', category: 'School', instructor: 'Anita Gurung', rating: 4.6, numReviews: 156, price: 1999, students: 987 },
-  { id: 's5', title: 'Bachelor Mathematics - Calculus & Algebra', category: 'Bachelor', instructor: 'Dr. Krishna Thapa', rating: 4.8, numReviews: 98, price: 4999, students: 654 },
-  { id: 's6', title: 'Chemistry for +2: Complete Syllabus', category: 'Plus2', instructor: 'Maya Devi', rating: 4.7, numReviews: 276, price: 3499, students: 1876 },
-];
-
-const testimonials = [
-  { name: 'Aarav Adhikari', role: 'Class 10 Student', quote: 'Hamro Tuition made SEE preparation so much easier. The video lessons are crystal clear and the teachers are always there to help.', rating: 5, avatar: 'AA' },
-  { name: 'Sneha Shrestha', role: '+2 Science Student', quote: 'The physics and chemistry courses are amazing! I went from struggling to scoring A in my exams. Highly recommended for all +2 students.', rating: 5, avatar: 'SS' },
-  { name: 'Bibek Thapa', role: 'Bachelor Student', quote: 'As a bachelor student, I was looking for quality math tutorials. Hamro Tuition delivered beyond expectations. The syllabus is perfectly structured.', rating: 5, avatar: 'BT' },
-];
-
 const categoryGradients = {
   School: 'from-green-400 to-emerald-500',
   Plus2: 'from-orange-400 to-red-500',
@@ -155,7 +140,7 @@ const LiveClassSection = ({ sessions = [] }) => {
 
 const Home = ({ onLoginClick }) => {
   const [notices, setNotices] = useState([]);
-  const [featuredCourses, setFeaturedCourses] = useState(sampleCourses);
+  const [featuredCourses, setFeaturedCourses] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [liveSessions, setLiveSessions] = useState([]);
 
@@ -292,9 +277,8 @@ const Home = ({ onLoginClick }) => {
                   </div>
                 </Link>
               </motion.div>
-            ))}
-          </motion.div>
-        </div>
+            )))}
+          </div>
       </section>
 
       {/* C) Featured Courses Section */}
@@ -311,7 +295,9 @@ const Home = ({ onLoginClick }) => {
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredCourses.map((course, i) => (
+            {featuredCourses.length === 0 ? (
+              <p className="col-span-full text-center text-gray-400 py-8">No courses available yet.</p>
+            ) : featuredCourses.map((course, i) => (
               <motion.div
                 key={course.id || course._id}
                 initial={{ opacity: 0, y: 30 }}
@@ -426,7 +412,9 @@ const Home = ({ onLoginClick }) => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {(testimonials.length > 0 ? testimonials : []).map((t, i) => (
+            {testimonials.length === 0 ? (
+              <p className="col-span-full text-center text-gray-400 py-8">No testimonials yet.</p>
+            ) : (testimonials.map((t, i) => (
               <motion.div
                 key={t._id || i}
                 initial={{ opacity: 0, y: 30 }}
@@ -496,36 +484,7 @@ const Home = ({ onLoginClick }) => {
                 </motion.div>
               ))
             ) : (
-              <>
-                {[
-                  { title: 'New Courses Added for 2082 Session', date: '2026-01-15', content: 'We have added new courses for the upcoming academic session 2082. Enroll now to get early bird discounts!' },
-                  { title: 'Free Trial Classes Starting Soon', date: '2026-01-10', content: 'Join our free trial classes and experience quality education from the comfort of your home.' },
-                  { title: 'Scholarship Program Announced', date: '2026-01-05', content: 'We are offering scholarships to deserving students. Apply now to get up to 50% fee waiver.' },
-                ].map((notice, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: i * 0.05 }}
-                    className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-blue-500 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start gap-3">
-                      <FaBell className="text-blue-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium text-gray-900">{notice.title}</h3>
-                          <span className="text-xs text-gray-400 flex items-center gap-1">
-                            <FaCalendarAlt className="text-[10px]" />
-                            {notice.date}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-500">{notice.content}</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </>
+              <p className="text-center text-gray-400 py-8">No announcements yet.</p>
             )}
           </div>
         </div>
