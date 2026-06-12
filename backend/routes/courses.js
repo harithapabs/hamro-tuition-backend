@@ -5,16 +5,27 @@ const router = express.Router();
 
 router.get('/', cacheMiddleware({ ttl: 120 }), async (req, res) => {
   try {
-    const { category, search } = req.query;
+    const { category, search, limit: limitParam, page } = req.query;
     let query = {};
     if (category) query.category = category;
     if (search) {
       const re = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       query.$or = [{ title: re }, { instructor: re }, { description: re }, { category: re }];
     }
-    const courses = await req.db.courses.find(query).sort({ createdAt: -1 });
+    const total = await req.db.courses.count(query);
+    let dbQuery = req.db.courses.find(query).sort({ createdAt: -1 });
+    if (limitParam) {
+      const lim = Math.min(parseInt(limitParam) || 12, 50);
+      const pg = Math.max(parseInt(page) || 1, 1);
+      dbQuery = dbQuery.skip((pg - 1) * lim).limit(lim);
+    }
+    const courses = await dbQuery;
     const slim = courses.map(({ chapters, ...rest }) => rest);
-    res.json(slim);
+    if (limitParam) {
+      res.json({ courses: slim, total, page: parseInt(page) || 1, pages: Math.ceil(total / (parseInt(limitParam) || 12)) });
+    } else {
+      res.json(slim);
+    }
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 

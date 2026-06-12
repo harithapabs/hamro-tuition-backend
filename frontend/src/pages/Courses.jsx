@@ -105,16 +105,25 @@ const Courses = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [activeCategory, setActiveCategory] = useState(searchParams.get('category') || '');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
       try {
-        const params = {};
+        const params = { limit: 12, page };
         if (activeCategory) params.category = activeCategory;
         if (searchQuery) params.search = searchQuery;
-        const { data } = await courseAPI.getAll(Object.keys(params).length ? params : undefined);
-        setCourses(data);
+        const { data } = await courseAPI.getAll(params);
+        if (data.courses) {
+          setCourses(data.courses);
+          setTotalPages(data.pages || 1);
+          setTotal(data.total || 0);
+        } else {
+          setCourses(Array.isArray(data) ? data : []);
+        }
       } catch {
         setCourses([]);
       } finally {
@@ -122,11 +131,12 @@ const Courses = () => {
       }
     };
     fetchCourses();
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, page]);
 
   const handleCategoryChange = (cat) => {
     setActiveCategory(cat);
-    const params = {};
+    setPage(1);
+    const params = { page: 1 };
     if (cat) params.category = cat;
     if (searchQuery) params.q = searchQuery;
     setSearchParams(params);
@@ -210,11 +220,47 @@ const Courses = () => {
             variant="courses"
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course, i) => (
-              <CourseCard key={course._id} course={course} index={i} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {courses.map((course, i) => (
+                <CourseCard key={course._id} course={course} index={i} />
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-10">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                      p === page
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-blue-50'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+            <p className="text-center text-sm text-gray-400 mt-4">
+              Showing {courses.length} of {total} courses
+            </p>
+          </>
         )}
       </div>
     </div>

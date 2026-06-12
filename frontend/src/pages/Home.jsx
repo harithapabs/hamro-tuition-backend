@@ -6,6 +6,7 @@ import {
   FaUserTie, FaUsers, FaArrowRight, FaQuoteLeft, FaBell,
   FaChalkboardTeacher, FaSmile, FaCalendarAlt, FaVideo, FaClock, FaPlay,
 } from 'react-icons/fa';
+import HeroSection from '../components/HeroSection';
 import ParticleBackground from '../components/ParticleBackground';
 import { courseAPI, noticeAPI, liveSessionAPI } from '../utils/api';
 
@@ -143,27 +144,31 @@ const Home = ({ onLoginClick }) => {
   const [featuredCourses, setFeaturedCourses] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [liveSessions, setLiveSessions] = useState([]);
+  const [homeLoading, setHomeLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const { data: courses } = await courseAPI.getAll();
-        if (courses?.length > 0) setFeaturedCourses(courses.slice(0, 6));
-      } catch {}
-      try {
-        const { data } = await noticeAPI.getAll();
-        setNotices(data);
-      } catch {}
-      try {
-        const { data } = await courseAPI.getApprovedReviews();
-        setTestimonials(Array.isArray(data) ? data : []);
-      } catch {}
-      try {
-        const { data } = await liveSessionAPI.getAll();
+      setHomeLoading(true);
+      const [coursesRes, noticesRes, reviewsRes, sessionsRes] = await Promise.allSettled([
+        courseAPI.getAll({ limit: 6 }),
+        noticeAPI.getAll(),
+        courseAPI.getApprovedReviews(),
+        liveSessionAPI.getAll(),
+      ]);
+      if (coursesRes.status === 'fulfilled' && coursesRes.value?.data?.length > 0) {
+        setFeaturedCourses(coursesRes.value.data.slice(0, 6));
+      }
+      if (noticesRes.status === 'fulfilled') setNotices(noticesRes.value?.data || []);
+      if (reviewsRes.status === 'fulfilled') {
+        const d = reviewsRes.value?.data;
+        setTestimonials(Array.isArray(d) ? d : []);
+      }
+      if (sessionsRes.status === 'fulfilled') {
         const now = new Date();
-        const upcoming = (Array.isArray(data) ? data : []).filter(s => new Date(s.scheduledAt) > now);
+        const upcoming = (Array.isArray(sessionsRes.value?.data) ? sessionsRes.value.data : []).filter(s => new Date(s.scheduledAt) > now);
         setLiveSessions(upcoming.slice(0, 4));
-      } catch {}
+      }
+      setHomeLoading(false);
     };
     fetchData();
   }, []);
@@ -171,72 +176,7 @@ const Home = ({ onLoginClick }) => {
   return (
     <div className="overflow-hidden">
       {/* A) Hero Section */}
-      <section className="relative min-h-screen flex items-center bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-900 overflow-hidden">
-        <ParticleBackground />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/3 right-1/4 w-4 h-4 bg-white/30 rounded-full floating" />
-        <div className="absolute bottom-1/4 left-1/3 w-6 h-6 bg-white/20 rounded-full floating" style={{ animationDelay: '2s' }} />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-blue-200 text-lg md:text-xl mb-4"
-          >
-            Welcome to
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-4"
-          >
-            Hamro <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-cyan-200">Tuition</span>
-          </motion.h1>
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="h-1 w-32 bg-gradient-to-r from-blue-400 to-cyan-300 mx-auto rounded-full mb-6"
-          />
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-blue-100 text-lg md:text-xl max-w-2xl mx-auto mb-8"
-          >
-            Learn From Nepal's Best Teachers. Class 8 to Bachelor Level.
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="text-blue-200/80 text-base max-w-xl mx-auto mb-8"
-          >
-            Join thousands of students learning from Nepal's best educators. Quality education at your fingertips.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-wrap justify-center gap-4"
-          >
-            <Link
-              to="/courses"
-              className="px-8 py-3 bg-white text-blue-700 font-semibold rounded-full hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl"
-            >
-              Get Started Free <FaArrowRight className="inline ml-2 text-sm" />
-            </Link>
-            <Link
-              to="/courses"
-              className="px-8 py-3 border-2 border-white/30 text-white font-semibold rounded-full hover:bg-white/10 transition-all backdrop-blur-sm"
-            >
-              Explore Courses
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+      <HeroSection onLoginClick={onLoginClick} />
 
       {/* Live Classes Section */}
       <LiveClassSection sessions={liveSessions} />
@@ -277,8 +217,9 @@ const Home = ({ onLoginClick }) => {
                   </div>
                 </Link>
               </motion.div>
-            )))}
-          </div>
+            ))}
+          </motion.div>
+        </div>
       </section>
 
       {/* C) Featured Courses Section */}
@@ -295,7 +236,21 @@ const Home = ({ onLoginClick }) => {
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredCourses.length === 0 ? (
+            {homeLoading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-md animate-pulse">
+                  <div className="h-44 bg-gray-200" />
+                  <div className="p-5 space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-3/4" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    <div className="flex justify-between">
+                      <div className="h-4 bg-gray-200 rounded w-1/4" />
+                      <div className="h-5 bg-gray-200 rounded w-1/4" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : featuredCourses.length === 0 ? (
               <p className="col-span-full text-center text-gray-400 py-8">No courses available yet.</p>
             ) : featuredCourses.map((course, i) => (
               <motion.div
@@ -444,7 +399,7 @@ const Home = ({ onLoginClick }) => {
                   </div>
                 </div>
               </motion.div>
-            ))}
+            )))}
           </div>
         </div>
       </section>
