@@ -146,7 +146,7 @@ if (USE_MONGODB) {
     'quizzes', 'assignments', 'paymentSettings', 'liveSessions', 'enrollments',
     'liveAssignments', 'liveSubmissions', 'notifications', 'certificates',
     'progress', 'referrals', 'tokenTransactions', 'refreshTokens',
-    'auditLogs', 'revokedTokens'
+    'auditLogs', 'revokedTokens', 'visitors'
   ];
 
   const db = {};
