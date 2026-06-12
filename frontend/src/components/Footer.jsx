@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FaBookOpen, FaFacebook, FaYoutube, FaInstagram, FaEnvelope, FaMapMarkerAlt, FaPhone } from 'react-icons/fa';
+import VisitorCounter from './VisitorCounter';
 
 const Footer = () => {
   return (
@@ -68,8 +69,9 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
+        <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
           <p>&copy; {new Date().getFullYear()} Hamro Tuition. All rights reserved.</p>
+          <VisitorCounter />
         </div>
       </div>
     </footer>

@@ -176,4 +176,9 @@ export const liveSessionAPI = {
   allSubmissions: () => API.get('/live-sessions/submissions'),
 };
 
+export const visitorAPI = {
+  getCount: () => API.get('/visitors'),
+  hit: () => API.post('/visitors/hit'),
+};
+
 export default API;

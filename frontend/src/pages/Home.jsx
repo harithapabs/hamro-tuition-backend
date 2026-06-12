@@ -155,8 +155,10 @@ const Home = ({ onLoginClick }) => {
         courseAPI.getApprovedReviews(),
         liveSessionAPI.getAll(),
       ]);
-      if (coursesRes.status === 'fulfilled' && coursesRes.value?.data?.length > 0) {
-        setFeaturedCourses(coursesRes.value.data.slice(0, 6));
+      if (coursesRes.status === 'fulfilled') {
+        const d = coursesRes.value?.data;
+        const list = Array.isArray(d) ? d : (d?.courses || []);
+        if (list.length > 0) setFeaturedCourses(list.slice(0, 6));
       }
       if (noticesRes.status === 'fulfilled') setNotices(noticesRes.value?.data || []);
       if (reviewsRes.status === 'fulfilled') {

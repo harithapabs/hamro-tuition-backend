@@ -185,6 +185,7 @@ app.use('/api/payment-settings', require('./routes/payment-settings'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/certificates', require('./routes/certificates'));
 app.use('/api/live-sessions', require('./routes/livesessions'));
+app.use('/api/visitors', require('./routes/visitors'));
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Not found' });
