@@ -42,7 +42,7 @@ const CourseCard = ({ course, index }) => (
       <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
         <div
           className={`h-44 bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} relative overflow-hidden bg-gray-200`}
-          style={course.thumbnail ? { backgroundImage: `url(${course.thumbnail})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' } : {}}
+          style={course.thumbnail ? { backgroundImage: `url(${course.thumbnail})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'top center' } : {}}
         >
           {course.thumbnail ? null : (
             <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white/20">{course.category}</span>

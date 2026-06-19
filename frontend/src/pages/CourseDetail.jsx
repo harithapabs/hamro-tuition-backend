@@ -13,19 +13,19 @@ import toast from 'react-hot-toast';
 const tabs = ['Description', 'Syllabus', 'Reviews'];
 
 const categoryGradients = {
-  School: 'from-green-400 to-emerald-500',
-  Plus2: 'from-orange-400 to-red-500',
-  Bachelor: 'from-pink-400 to-rose-500',
-  Master: 'from-indigo-400 to-purple-600',
-  Aayog: 'from-red-400 to-orange-500',
+  School: 'from-cyan-400 to-blue-500',
+  Plus2: 'from-cyan-400 to-blue-500',
+  Bachelor: 'from-cyan-400 to-blue-500',
+  Master: 'from-cyan-400 to-blue-500',
+  Aayog: 'from-cyan-400 to-blue-500',
 };
 
 const categoryBadge = {
-  School: 'bg-green-100 text-green-700',
-  Plus2: 'bg-orange-100 text-orange-700',
-  Bachelor: 'bg-pink-100 text-pink-700',
-  Master: 'bg-indigo-100 text-indigo-700',
-  Aayog: 'bg-red-100 text-red-700',
+  School: 'bg-cyan-100 text-cyan-700',
+  Plus2: 'bg-cyan-100 text-cyan-700',
+  Bachelor: 'bg-cyan-100 text-cyan-700',
+  Master: 'bg-cyan-100 text-cyan-700',
+  Aayog: 'bg-cyan-100 text-cyan-700',
 };
 
 const CourseDetail = ({ onLoginClick }) => {
@@ -129,7 +129,7 @@ const CourseDetail = ({ onLoginClick }) => {
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
               <div
                 className={`h-40 rounded-xl bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} mb-4 overflow-hidden relative bg-gray-200`}
-                style={course.thumbnail ? { backgroundImage: `url(${course.thumbnail})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' } : {}}
+                style={course.thumbnail ? { backgroundImage: `url(${course.thumbnail})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'top center' } : {}}
               >
                 {course.thumbnail ? null : (
                   <FaPlay className="absolute inset-0 m-auto text-4xl text-white/60" />
@@ -141,7 +141,7 @@ const CourseDetail = ({ onLoginClick }) => {
               {isEnrolled ? (
                 <Link
                   to={`/dashboard/student/course/${course._id}`}
-                  className="block w-full py-3 bg-green-500 hover:bg-green-600 text-white text-center font-medium rounded-xl transition-colors"
+                  className="block w-full py-3 bg-blue-500 hover:bg-blue-600 text-white text-center font-medium rounded-xl transition-colors"
                 >
                   Go to Course
                 </Link>

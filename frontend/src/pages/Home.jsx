@@ -266,7 +266,7 @@ const Home = ({ onLoginClick }) => {
                   <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                     <div
                       className={`h-44 bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} relative overflow-hidden bg-gray-200`}
-                      style={course.thumbnail ? { backgroundImage: `url(${course.thumbnail})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' } : {}}
+                      style={course.thumbnail ? { backgroundImage: `url(${course.thumbnail})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'top center' } : {}}
                     >
                       {!course.thumbnail && (
                         <div className="w-full h-full flex items-center justify-center">
