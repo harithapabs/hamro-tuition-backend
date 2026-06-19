@@ -132,47 +132,6 @@ const HeroSection = ({ onLoginClick }) => {
                     </a>
                   </div>
                 </div>
-
-                <motion.div
-                  {...floatAnim}
-                  className="absolute -top-4 -left-4 bg-white rounded-xl shadow-xl p-3 flex items-center gap-2 border border-gray-100 z-20"
-                >
-                  <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
-                    <FaPlay className="text-white text-xs" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-gray-900 block">Live Classes</span>
-                    <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold animate-pulse">LIVE</span>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  {...floatAnim}
-                  transition={{ ...floatAnim.transition, delay: 1 }}
-                  className="absolute -bottom-4 -left-6 bg-white rounded-xl shadow-xl p-3 flex items-center gap-2 border border-gray-100 z-20"
-                >
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                    <FaChalkboardTeacher className="text-white text-xs" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-gray-900 block">Expert Teachers</span>
-                    <span className="text-[10px] text-gray-500">Nepal's Best Educators</span>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  {...floatAnim}
-                  transition={{ ...floatAnim.transition, delay: 2 }}
-                  className="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-xl p-3 flex items-center gap-2 border border-gray-100 z-20"
-                >
-                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                    <FaClock className="text-white text-xs" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-gray-900 block">Recorded Lessons</span>
-                    <span className="text-[10px] text-gray-500">Watch Anytime</span>
-                  </div>
-                </motion.div>
               </div>
             </motion.div>
           </div>
