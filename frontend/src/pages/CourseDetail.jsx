@@ -129,9 +129,10 @@ const CourseDetail = ({ onLoginClick }) => {
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
               <div
                 className={`h-40 rounded-xl bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} mb-4 overflow-hidden relative bg-gray-200`}
-                style={course.thumbnail ? { backgroundImage: `url(${course.thumbnail})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'top center' } : {}}
               >
-                {course.thumbnail ? null : (
+                {course.thumbnail ? (
+                  <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover object-top" />
+                ) : (
                   <FaPlay className="absolute inset-0 m-auto text-4xl text-white/60" />
                 )}
               </div>
