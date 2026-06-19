@@ -104,9 +104,20 @@ const HeroSection = ({ onLoginClick }) => {
                       CLASS 12<br />MATHEMATICS
                     </h2>
 
-                    <h3 className="text-yellow-400 font-bold text-lg mb-5 drop-shadow">
+                    <h3 className="text-yellow-400 font-bold text-lg mb-4 drop-shadow">
                       GRADE INCREMENT EXAM PREPARATION
                     </h3>
+
+                    <div className="flex justify-center gap-4 mb-5">
+                      <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2 text-center">
+                        <span className="text-xs text-blue-200 block">📅 Date</span>
+                        <span className="text-white font-bold text-sm">2083/03/07</span>
+                      </div>
+                      <div className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2 text-center">
+                        <span className="text-xs text-blue-200 block">🕐 Time</span>
+                        <span className="text-white font-bold text-sm">7:00 AM</span>
+                      </div>
+                    </div>
 
                     <div className="space-y-3 text-left text-sm md:text-base mb-6">
                       {[
