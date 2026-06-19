@@ -131,7 +131,7 @@ const CourseDetail = ({ onLoginClick }) => {
                 className={`h-40 rounded-xl bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} mb-4 overflow-hidden relative bg-gray-200`}
               >
                 {course.thumbnail ? (
-                  <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover object-top" />
+                  <img src={course.thumbnail} alt={course.title} className="w-full h-full object-contain" />
                 ) : (
                   <FaPlay className="absolute inset-0 m-auto text-4xl text-white/60" />
                 )}
