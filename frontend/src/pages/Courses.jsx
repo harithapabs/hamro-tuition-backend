@@ -41,10 +41,10 @@ const CourseCard = ({ course, index }) => (
     <Link to={`/course/${course._id}`} className="block group">
       <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
         <div
-          className={`h-52 bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} relative overflow-hidden bg-gray-200`}
+          className={`aspect-video bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} relative overflow-hidden bg-gray-200`}
         >
           {course.thumbnail ? (
-            <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover object-center" />
+            <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
           ) : (
             <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white/20">{course.category}</span>
           )}

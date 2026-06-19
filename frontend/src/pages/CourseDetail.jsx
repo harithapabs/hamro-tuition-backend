@@ -128,10 +128,10 @@ const CourseDetail = ({ onLoginClick }) => {
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
               <div
-                className={`h-48 rounded-xl bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} mb-4 overflow-hidden relative bg-gray-200`}
+                className={`aspect-video rounded-xl bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} mb-4 overflow-hidden relative bg-gray-200`}
               >
                 {course.thumbnail ? (
-                  <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover object-center" />
+                  <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
                 ) : (
                   <FaPlay className="absolute inset-0 m-auto text-4xl text-white/60" />
                 )}
