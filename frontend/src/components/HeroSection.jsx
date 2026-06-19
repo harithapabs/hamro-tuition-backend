@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   FaRocket, FaBook, FaChalkboardTeacher, FaVideo, FaUsers, FaGraduationCap,
-  FaStar, FaLaptop, FaPlay, FaClock,
+  FaStar, FaLaptop, FaPlay, FaClock, FaCheckCircle,
 } from 'react-icons/fa';
+
+const GOOGLE_FORM_URL = 'https://forms.gle/iaATwc6NC5bMG3Ez6';
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -89,41 +91,51 @@ const HeroSection = ({ onLoginClick }) => {
               transition={{ delay: 0.3, duration: 0.6 }}
               className="relative flex justify-center"
             >
-              <div className="relative w-full max-w-md">
-                <div className="relative bg-gradient-to-br from-blue-500/90 to-blue-700/90 backdrop-blur-sm rounded-3xl p-8 border border-blue-400/30 shadow-2xl">
-                  <div className="absolute -top-4 -right-4 w-20 h-20 bg-yellow-400/30 rounded-full blur-xl" />
-                  <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-purple-400/30 rounded-full blur-xl" />
+              <div className="relative w-full max-w-lg">
+                <div className="relative bg-gradient-to-br from-[#001f5b] via-[#002d7a] to-[#001a4d] rounded-3xl overflow-hidden border border-blue-400/30 shadow-2xl">
+                  <div className="absolute inset-0 bg-black/20" />
 
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div className="w-48 h-48 rounded-2xl overflow-hidden mb-4 border-4 border-white/40 shadow-lg bg-white">
-                      <img src="/hero-student.png" alt="Student learning on laptop" className="w-full h-full object-cover" />
+                  <div className="relative z-10 p-8 text-center text-white">
+                    <div className="inline-block bg-red-600 px-6 py-2 rounded-full font-bold text-base mb-5 shadow-lg shadow-red-600/40 animate-pulse">
+                      🎯 FREE LIVE CLASS
                     </div>
 
-                    <div className="w-full bg-white/15 rounded-xl p-3 mb-3 border border-white/20">
-                      <div className="flex items-center gap-2 mb-1">
-                        <FaLaptop className="text-blue-200 text-sm" />
-                        <span className="text-white text-sm font-medium">Hamro Tuition</span>
-                      </div>
-                      <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
-                        <div className="h-full w-3/4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full" />
-                      </div>
-                      <span className="text-xs text-blue-100 mt-1 block">Course Progress: 75%</span>
-                    </div>
+                    <h2 className="text-3xl sm:text-4xl font-extrabold mb-2 leading-tight drop-shadow-lg">
+                      CLASS 12<br />MATHEMATICS
+                    </h2>
 
-                    <div className="flex gap-2 w-full">
-                      {['Mathematics', 'Science', 'English'].map((book) => (
-                        <div key={book} className="flex-1 bg-white/15 rounded-lg p-2 text-center border border-white/20">
-                          <FaBook className="text-white/80 text-sm mx-auto mb-1" />
-                          <span className="text-xs text-white/90">{book}</span>
+                    <h3 className="text-yellow-400 font-bold text-lg mb-5 drop-shadow">
+                      GRADE INCREMENT EXAM PREPARATION
+                    </h3>
+
+                    <div className="space-y-3 text-left text-sm md:text-base mb-6">
+                      {[
+                        'Important Board Questions',
+                        'Easy Tricks & Shortcuts',
+                        'Live Doubt Solving',
+                        'Score Boosting Strategies',
+                      ].map((item) => (
+                        <div key={item} className="flex items-center gap-2">
+                          <FaCheckCircle className="text-green-400 flex-shrink-0" />
+                          <span className="text-blue-100">{item}</span>
                         </div>
                       ))}
                     </div>
+
+                    <a
+                      href={GOOGLE_FORM_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-10 rounded-full text-lg transition-all shadow-lg shadow-red-600/40 hover:shadow-red-600/60 hover:scale-105 active:scale-95 animate-pulse cursor-pointer"
+                    >
+                      REGISTER NOW
+                    </a>
                   </div>
                 </div>
 
                 <motion.div
                   {...floatAnim}
-                  className="absolute -top-6 -left-4 bg-white rounded-xl shadow-xl p-3 flex items-center gap-2 border border-gray-100 z-20"
+                  className="absolute -top-4 -left-4 bg-white rounded-xl shadow-xl p-3 flex items-center gap-2 border border-gray-100 z-20"
                 >
                   <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
                     <FaPlay className="text-white text-xs" />
