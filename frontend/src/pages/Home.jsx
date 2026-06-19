@@ -265,10 +265,10 @@ const Home = ({ onLoginClick }) => {
                 <Link to={`/course/${course._id || course.id}`} className="block group">
                   <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                     <div
-                      className={`h-44 bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} relative overflow-hidden bg-gray-200`}
+                      className={`h-52 bg-gradient-to-br ${categoryGradients[course.category] || 'from-blue-400 to-indigo-500'} relative overflow-hidden bg-gray-200`}
                     >
                       {course.thumbnail ? (
-                        <img src={course.thumbnail} alt={course.title} className="w-full h-full object-contain" />
+                        <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover object-center" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <span className="text-5xl font-bold text-white/20">{course.category === 'School' ? 'S' : course.category === 'Plus2' ? '+2' : course.category === 'Bachelor' ? 'B' : course.category === 'Master' ? 'M' : course.category === 'Aayog' ? 'A' : '?'}</span>
