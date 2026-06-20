@@ -26,12 +26,21 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: [],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
-        runtimeCaching: []
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*\.hamrotuition\.com\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: { maxEntries: 50, maxAgeSeconds: 300 }
+            }
+          }
+        ]
       }
     })
   ],
