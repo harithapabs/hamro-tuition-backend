@@ -78,6 +78,7 @@ const Quiz = () => {
       text: m.question,
       options: m.options,
       correct: m.correctAnswer,
+      explanation: m.explanation || '',
     }));
     setQuestions(qs);
 
@@ -275,6 +276,9 @@ const Quiz = () => {
                         : `Your answer: ${q.options[q.userAnswer] !== undefined ? q.options[q.userAnswer] : 'None'} | Correct: ${q.options[q.correct]}`
                       }
                     </p>
+                    {q.explanation && (
+                      <p className="text-xs text-blue-600 mt-1.5 bg-blue-50 px-2 py-1 rounded-lg">{q.explanation}</p>
+                    )}
                   </div>
                   <span className={`text-xs font-medium ${q.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
                     {q.isCorrect ? '+1' : '+0'}

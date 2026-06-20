@@ -73,7 +73,7 @@ router.get('/quiz/:courseId/:chapterIndex', async (req, res) => {
     const chIdx = parseInt(req.params.chapterIndex);
     const ch = (course.chapters || [])[chIdx];
     if (!ch) return res.status(404).json({ message: 'Chapter not found' });
-    const mcqs = (ch.mcqs || []).map(m => ({ question: m.question, options: m.options, correctAnswer: m.correctAnswer }));
+    const mcqs = (ch.mcqs || []).map(m => ({ question: m.question, options: m.options, correctAnswer: m.correctAnswer, explanation: m.explanation || '' }));
     res.json({ courseTitle: course.title, chapterTitle: ch.title, mcqs });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });

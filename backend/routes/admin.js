@@ -521,7 +521,7 @@ router.get('/quiz/:courseId/chapter/:chapterIndex', async (req, res) => {
 // Add MCQ to a chapter
 router.post('/quiz/:courseId/chapter/:chapterIndex', async (req, res) => {
   try {
-    const { question, options, correctAnswer } = req.body;
+    const { question, options, correctAnswer, explanation } = req.body;
     if (!question || !options || options.length < 2 || correctAnswer === undefined) {
       return res.status(400).json({ message: 'question, options (min 2), correctAnswer required' });
     }
@@ -530,7 +530,7 @@ router.post('/quiz/:courseId/chapter/:chapterIndex', async (req, res) => {
     const chIdx = parseInt(req.params.chapterIndex);
     if (!course.chapters || !course.chapters[chIdx]) return res.status(404).json({ message: 'Chapter not found' });
     if (!course.chapters[chIdx].mcqs) course.chapters[chIdx].mcqs = [];
-    course.chapters[chIdx].mcqs.push({ question, options, correctAnswer });
+    course.chapters[chIdx].mcqs.push({ question, options, correctAnswer, explanation: explanation || '' });
     await req.db.courses.remove({ _id: course._id }, {});
     await req.db.courses.insert(course);
     invalidateByPattern('/api/courses');
@@ -550,6 +550,7 @@ router.put('/quiz/:courseId/chapter/:chapterIndex/:mcqIndex', async (req, res) =
     if (question !== undefined) course.chapters[chIdx].mcqs[mcqIdx].question = question;
     if (options !== undefined) course.chapters[chIdx].mcqs[mcqIdx].options = options;
     if (correctAnswer !== undefined) course.chapters[chIdx].mcqs[mcqIdx].correctAnswer = correctAnswer;
+    if (explanation !== undefined) course.chapters[chIdx].mcqs[mcqIdx].explanation = explanation;
     await req.db.courses.remove({ _id: course._id }, {});
     await req.db.courses.insert(course);
     invalidateByPattern('/api/courses');
@@ -592,14 +593,16 @@ router.post('/quiz/:courseId/chapter/:chapterIndex/import', async (req, res) => 
       if (!trimmed || trimmed.toLowerCase().startsWith('question,')) continue;
       const parts = trimmed.split(',').map(s => s.trim());
       if (parts.length < 6) { skipped++; continue; }
-      const [question, o1, o2, o3, o4, correct] = parts;
+      const [question, o1, o2, o3, o4, correct, ...explanationParts] = parts;
       const correctIdx = ['a', 'b', 'c', 'd', '1', '2', '3', '4'].indexOf(correct.toLowerCase());
       if (correctIdx === -1 || !question) { skipped++; continue; }
       const correctAnswer = correctIdx >= 4 ? correctIdx - 4 : correctIdx;
+      const explanation = explanationParts.length > 0 ? explanationParts.join(',').trim() : '';
       course.chapters[chIdx].mcqs.push({
         question,
         options: [o1, o2, o3, o4],
         correctAnswer,
+        explanation,
       });
       imported++;
     }

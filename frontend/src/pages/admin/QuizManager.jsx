@@ -18,6 +18,7 @@ const QuizManager = () => {
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '', '', '']);
   const [correctAnswer, setCorrectAnswer] = useState(0);
+  const [explanation, setExplanation] = useState('');
   const [saving, setSaving] = useState(false);
 
   // CSV import
@@ -31,6 +32,7 @@ const QuizManager = () => {
   const [editQ, setEditQ] = useState('');
   const [editOpts, setEditOpts] = useState(['', '', '', '']);
   const [editCorrect, setEditCorrect] = useState(0);
+  const [editExpl, setEditExpl] = useState('');
 
   useEffect(() => {
     adminAPI.getQuizCourses().then(({ data }) => setCourses(data)).catch(() => {});
@@ -62,9 +64,10 @@ const QuizManager = () => {
         question: question.trim(),
         options: options.map(o => o.trim()),
         correctAnswer,
+        explanation: explanation.trim(),
       });
       toast.success('MCQ added!');
-      setQuestion(''); setOptions(['', '', '', '']); setCorrectAnswer(0); setShowAdd(false);
+      setQuestion(''); setOptions(['', '', '', '']); setCorrectAnswer(0); setExplanation(''); setShowAdd(false);
       fetchMCQs();
     } catch { toast.error('Failed to add'); }
     setSaving(false);
@@ -108,12 +111,13 @@ const QuizManager = () => {
     setEditQ(mcqs[idx].question);
     setEditOpts([...mcqs[idx].options]);
     setEditCorrect(mcqs[idx].correctAnswer);
+    setEditExpl(mcqs[idx].explanation || '');
   };
 
   const saveEdit = async () => {
     try {
       await adminAPI.updateMCQ(selectedCourse, selectedChapter, editIdx, {
-        question: editQ, options: editOpts, correctAnswer: editCorrect,
+        question: editQ, options: editOpts, correctAnswer: editCorrect, explanation: editExpl,
       });
       toast.success('Updated');
       setEditIdx(-1);
@@ -209,6 +213,12 @@ const QuizManager = () => {
                   ))}
                 </div>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Explanation (optional)</label>
+                <textarea rows={2} value={explanation} onChange={e => setExplanation(e.target.value)}
+                  placeholder="Why is this the correct answer?"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+              </div>
               <div className="flex gap-2">
                 <button onClick={handleAddMCQ} disabled={saving}
                   className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:opacity-50">
@@ -230,9 +240,9 @@ const QuizManager = () => {
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
             className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6 overflow-hidden">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Import MCQs from CSV</h3>
-            <p className="text-xs text-gray-500 mb-4">Format: question,option1,option2,option3,option4,correctAnswer (A/B/C/D)</p>
+            <p className="text-xs text-gray-500 mb-4">Format: question,option1,option2,option3,option4,correctAnswer,explanation (explanation optional)</p>
             <textarea rows={8} value={csvText} onChange={e => setCsvText(e.target.value)}
-              placeholder={"What is 2+2?,3,4,5,6,B\nSquare root of 9?,2,3,4,5,B"}
+              placeholder={"What is 2+2?,3,4,5,6,B,Two plus two equals four\nSquare root of 9?,2,3,4,5,B,3 squared is 9"}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
             <div className="flex gap-2 mt-4">
               <button onClick={handleCSVImport} disabled={importing}
@@ -280,6 +290,9 @@ const QuizManager = () => {
                           </button>
                         ))}
                       </div>
+                      <textarea rows={2} value={editExpl} onChange={e => setEditExpl(e.target.value)}
+                        placeholder="Explanation (optional)"
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
                       <div className="flex gap-2">
                         <button onClick={saveEdit} className="px-4 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg"><FiCheck className="inline" /> Save</button>
                         <button onClick={() => setEditIdx(-1)} className="px-4 py-1.5 border text-gray-600 text-xs font-medium rounded-lg"><FiX className="inline" /> Cancel</button>
@@ -296,6 +309,9 @@ const QuizManager = () => {
                             </span>
                           ))}
                         </div>
+                        {mcq.explanation && (
+                          <p className="text-xs text-blue-600 mt-1.5 bg-blue-50 px-2 py-1 rounded-lg">{mcq.explanation}</p>
+                        )}
                       </div>
                       <div className="flex gap-1 shrink-0">
                         <button onClick={() => startEdit(idx)} className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"><FiEdit2 size={14} /></button>
