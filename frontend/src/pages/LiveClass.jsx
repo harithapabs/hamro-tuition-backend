@@ -82,21 +82,26 @@ const LiveClass = () => {
                 {s.description && (
                   <p className="text-sm text-gray-500 leading-relaxed">{s.description}</p>
                 )}
-                {s.price && (
+                {s.price > 0 && Number(s.price) > 0 && (
                   <div className="flex items-center gap-1.5 text-lg font-bold text-gray-900">
                     <FiDollarSign className="text-green-500" /> Rs {s.price}
+                  </div>
+                )}
+                {(!s.price || Number(s.price) === 0) && (
+                  <div className="flex items-center gap-1.5 text-lg font-bold text-green-600">
+                    <FiDollarSign /> FREE
                   </div>
                 )}
                 <div className="flex items-center gap-3 pt-2">
                   {user ? (
                     <Link to={`/live-class/enroll/${s._id}`}
                       className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/20">
-                      Enroll Now <FiArrowRight />
+                      {(!s.price || Number(s.price) === 0) ? 'Enroll FREE' : 'Enroll Now'} <FiArrowRight />
                     </Link>
                   ) : (
                     <Link to="/login"
                       className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/20">
-                      Enroll Now <FiArrowRight />
+                      {(!s.price || Number(s.price) === 0) ? 'Enroll FREE' : 'Enroll Now'} <FiArrowRight />
                     </Link>
                   )}
                   {s.instructorPhone && (

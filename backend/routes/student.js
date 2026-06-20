@@ -65,6 +65,19 @@ router.get('/quiz/:lessonId', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// Get MCQs for a course chapter
+router.get('/quiz/:courseId/:chapterIndex', async (req, res) => {
+  try {
+    const course = await req.db.courses.findOne({ _id: req.params.courseId });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const chIdx = parseInt(req.params.chapterIndex);
+    const ch = (course.chapters || [])[chIdx];
+    if (!ch) return res.status(404).json({ message: 'Chapter not found' });
+    const mcqs = (ch.mcqs || []).map(m => ({ question: m.question, options: m.options, correctAnswer: m.correctAnswer }));
+    res.json({ courseTitle: course.title, chapterTitle: ch.title, mcqs });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 router.post('/quiz/submit', auth, async (req, res) => {
   try {
     const { quizId, answers } = req.body;

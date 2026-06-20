@@ -29,6 +29,7 @@ const ManageEnrollments = lazy(() => import('./pages/admin/ManageEnrollments'));
 const ManageSubmissions = lazy(() => import('./pages/admin/ManageSubmissions'));
 const Reports = lazy(() => import('./pages/admin/Reports'));
 const AuditLogs = lazy(() => import('./pages/admin/AuditLogs'));
+const QuizManager = lazy(() => import('./pages/admin/QuizManager'));
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
 const MyCourses = lazy(() => import('./pages/student/MyCourses'));
 const WatchVideo = lazy(() => import('./pages/student/WatchVideo'));
@@ -147,6 +148,7 @@ const AppContent = () => {
             <Route path="submissions" element={<ManageSubmissions />} />
             <Route path="reports" element={<Reports />} />
             <Route path="audit-logs" element={<AuditLogs />} />
+            <Route path="quiz-manager" element={<QuizManager />} />
           </Route>
         </Routes>
         </Suspense>

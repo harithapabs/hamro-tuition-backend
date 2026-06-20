@@ -31,7 +31,23 @@ const LiveSessionEnroll = () => {
     fetch();
   }, [sessionId]);
 
+  const isFree = !session.price || Number(session.price) === 0;
+
   const handleSubmit = async () => {
+    if (isFree) {
+      setSubmitting(true);
+      try {
+        const formData = new FormData();
+        formData.append('liveSessionId', sessionId);
+        formData.append('courseDetail', courseDetail);
+        await liveSessionAPI.enroll(formData);
+        toast.success('Enrolled successfully!');
+        navigate('/dashboard/student/assignments');
+      } catch {
+        toast.error('Failed to enroll');
+      } finally { setSubmitting(false); }
+      return;
+    }
     if (!file) {
       toast.error('Please upload payment screenshot');
       return;
@@ -102,59 +118,81 @@ const LiveSessionEnroll = () => {
                 <p className="text-sm text-gray-500">{session.description}</p>
               )}
 
-              {session.price && (
+              {session.price > 0 && Number(session.price) > 0 && (
                 <div className="flex items-center gap-2 text-xl font-bold text-gray-900">
                   <FiDollarSign className="text-green-500" /> Rs {session.price}
                 </div>
               )}
+              {isFree && (
+                <div className="flex items-center gap-2 text-xl font-bold text-green-600">
+                  <FiDollarSign /> FREE
+                </div>
+              )}
 
               <div className="border-t border-gray-100 pt-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment</h2>
-                {qrImage ? (
-                  <div className="flex flex-col items-center mb-6">
-                    <img src={qrImage} alt="Payment QR" className="w-48 h-48 object-contain border border-gray-200 rounded-xl p-2" />
-                    <p className="text-xs text-gray-400 mt-2">Scan to pay via Khalti / Bank</p>
+                {isFree ? (
+                  <div className="space-y-4">
+                    <div className="text-center py-6 bg-green-50 rounded-xl mb-6">
+                      <p className="text-lg font-bold text-green-600 mb-2">FREE Live Session!</p>
+                      <p className="text-sm text-gray-500">Click the button below to enroll instantly. No payment required.</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Course Details / Notes</label>
+                      <textarea rows="3" placeholder="Any details about the course you'd like to share..."
+                        value={courseDetail}
+                        onChange={(e) => setCourseDetail(e.target.value)}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" />
+                    </div>
+                    <button onClick={handleSubmit} disabled={submitting}
+                      className="w-full py-3 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-xl hover:from-green-600 hover:to-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                      {submitting ? 'Enrolling...' : 'Enroll Now (FREE)'}
+                    </button>
                   </div>
                 ) : (
-                  <div className="text-center py-6 bg-gray-50 rounded-xl mb-6">
-                    <p className="text-sm text-gray-500">No QR code configured. Contact admin for payment details.</p>
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment</h2>
+                    {qrImage ? (
+                      <div className="flex flex-col items-center mb-6">
+                        <img src={qrImage} alt="Payment QR" className="w-48 h-48 object-contain border border-gray-200 rounded-xl p-2" />
+                        <p className="text-xs text-gray-400 mt-2">Scan to pay via Khalti / Bank</p>
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 bg-gray-50 rounded-xl mb-6">
+                        <p className="text-sm text-gray-500">No QR code configured. Contact admin for payment details.</p>
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Upload Payment Screenshot *</label>
+                      <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-blue-300 transition-colors">
+                        {file ? (
+                          <div className="flex items-center justify-center gap-3">
+                            <FiCheck className="text-green-500 text-xl" />
+                            <span className="text-sm text-gray-700">{file.name}</span>
+                            <button onClick={() => setFile(null)} className="text-red-500 hover:text-red-600 text-sm">Remove</button>
+                          </div>
+                        ) : (
+                          <label className="cursor-pointer">
+                            <FiUpload className="text-gray-400 text-2xl mx-auto mb-2" />
+                            <p className="text-sm text-gray-500">Click to upload screenshot</p>
+                            <p className="text-xs text-gray-400 mt-1">JPG, PNG accepted</p>
+                            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Course Details / Notes</label>
+                      <textarea rows="3" placeholder="Any details about the course you'd like to share..."
+                        value={courseDetail}
+                        onChange={(e) => setCourseDetail(e.target.value)}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" />
+                    </div>
+                    <button onClick={handleSubmit} disabled={submitting}
+                      className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                      {submitting ? 'Submitting...' : <><FiUpload /> Submit Enrollment</>}
+                    </button>
                   </div>
                 )}
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Upload Payment Screenshot *</label>
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-blue-300 transition-colors">
-                      {file ? (
-                        <div className="flex items-center justify-center gap-3">
-                          <FiCheck className="text-green-500 text-xl" />
-                          <span className="text-sm text-gray-700">{file.name}</span>
-                          <button onClick={() => setFile(null)} className="text-red-500 hover:text-red-600 text-sm">Remove</button>
-                        </div>
-                      ) : (
-                        <label className="cursor-pointer">
-                          <FiUpload className="text-gray-400 text-2xl mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">Click to upload screenshot</p>
-                          <p className="text-xs text-gray-400 mt-1">JPG, PNG accepted</p>
-                          <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" />
-                        </label>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Course Details / Notes</label>
-                    <textarea rows="3" placeholder="Any details about the course you'd like to share..."
-                      value={courseDetail}
-                      onChange={(e) => setCourseDetail(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" />
-                  </div>
-
-                  <button onClick={handleSubmit} disabled={submitting}
-                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                    {submitting ? 'Submitting...' : <><FiUpload /> Submit Enrollment</>}
-                  </button>
-                </div>
               </div>
             </div>
           </div>

@@ -61,10 +61,8 @@ export default defineConfig({
           'framer-motion': ['framer-motion'],
           'toast': ['react-hot-toast'],
           'icons': ['react-icons/fi', 'react-icons/fa'],
-          'player': ['react-player'],
-          'charts': ['chart.js', 'react-chartjs-2'],
-          'html2canvas': ['html2canvas'],
-          'purify': ['dompurify']
+          'player': ['react-player/youtube'],
+          'charts': ['chart.js']
         }
       }
     }

@@ -115,6 +115,12 @@ export const adminAPI = {
   savePaymentSettings: (data) => API.put('/payment-settings', data),
   getReports: () => API.get('/admin/reports'),
   getAuditLogs: (params) => API.get('/admin/audit-logs', { params }),
+  getQuizCourses: () => API.get('/admin/quiz/courses'),
+  getChapterMCQs: (courseId, chIdx) => API.get(`/admin/quiz/${courseId}/chapter/${chIdx}`),
+  addMCQ: (courseId, chIdx, data) => API.post(`/admin/quiz/${courseId}/chapter/${chIdx}`, data),
+  updateMCQ: (courseId, chIdx, mcqIdx, data) => API.put(`/admin/quiz/${courseId}/chapter/${chIdx}/${mcqIdx}`, data),
+  deleteMCQ: (courseId, chIdx, mcqIdx) => API.delete(`/admin/quiz/${courseId}/chapter/${chIdx}/${mcqIdx}`),
+  importMCQs: (courseId, chIdx, csv) => API.post(`/admin/quiz/${courseId}/chapter/${chIdx}/import`, { csv }),
 };
 
 export const studentAPI = {
@@ -131,6 +137,8 @@ export const studentAPI = {
   markLessonComplete: (lessonId, courseId) => API.post(`/student/lesson/${lessonId}/complete`, { courseId }),
   getCourseProgress: (courseId) => API.get(`/student/course/${courseId}/progress`),
   getMyProgress: () => API.get('/student/my-progress'),
+  getMCQCourses: () => API.get('/student/my-courses'),
+  getChapterMCQs: (courseId, chIdx) => API.get(`/student/quiz/${courseId}/${chIdx}`),
   getReferralInfo: () => API.get('/student/referral/info'),
   validateReferralCode: (code) => API.get(`/student/referral/validate/${encodeURIComponent(code)}`),
 };

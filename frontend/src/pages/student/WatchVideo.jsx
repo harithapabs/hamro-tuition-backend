@@ -7,7 +7,7 @@ import {
   FiSmile, FiHelpCircle, FiX, FiVolume2, FiVolumeX, FiMaximize2, FiMinimize2,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import ReactPlayer from 'react-player';
+import ReactPlayer from 'react-player/youtube';
 import { courseAPI, studentAPI } from '../../utils/api';
 
 function getGoogleDriveFileId(url) {

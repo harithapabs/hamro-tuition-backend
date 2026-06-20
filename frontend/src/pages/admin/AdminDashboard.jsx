@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiGrid, FiBook, FiUsers, FiDollarSign, FiClipboard,
   FiMessageSquare, FiStar, FiLogOut, FiBell, FiChevronDown,
-  FiMenu, FiX, FiShield, FiVideo, FiUserCheck, FiFileText, FiBarChart2, FiActivity,
+  FiMenu, FiX, FiShield, FiVideo, FiUserCheck, FiFileText, FiBarChart2, FiActivity, FiHelpCircle,
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../utils/api';
@@ -22,6 +22,7 @@ const navItems = [
   { path: '/dashboard/admin/doubts', label: 'Doubts', icon: FiMessageSquare },
   { path: '/dashboard/admin/reviews', label: 'Reviews', icon: FiStar },
   { path: '/dashboard/admin/audit-logs', label: 'Audit Logs', icon: FiActivity },
+  { path: '/dashboard/admin/quiz-manager', label: 'Quiz Manager', icon: FiHelpCircle },
 ];
 
 const AdminDashboard = () => {

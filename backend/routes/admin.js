@@ -488,4 +488,127 @@ router.get('/audit-logs', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// ========== QUIZ / MCQ MANAGEMENT ==========
+
+// Get all courses with chapters (for dropdown)
+router.get('/quiz/courses', async (req, res) => {
+  try {
+    const courses = await req.db.courses.find({});
+    const result = courses.map(c => ({
+      _id: c._id,
+      title: c.title,
+      chapters: (c.chapters || []).map((ch, i) => ({
+        index: i,
+        title: ch.title || `Chapter ${i + 1}`,
+        mcqCount: (ch.mcqs || []).length,
+      })),
+    }));
+    res.json(result);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Get MCQs for a specific chapter
+router.get('/quiz/:courseId/chapter/:chapterIndex', async (req, res) => {
+  try {
+    const course = await req.db.courses.findOne({ _id: req.params.courseId });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const ch = (course.chapters || [])[parseInt(req.params.chapterIndex)];
+    if (!ch) return res.status(404).json({ message: 'Chapter not found' });
+    res.json({ chapter: ch.title, mcqs: ch.mcqs || [] });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Add MCQ to a chapter
+router.post('/quiz/:courseId/chapter/:chapterIndex', async (req, res) => {
+  try {
+    const { question, options, correctAnswer } = req.body;
+    if (!question || !options || options.length < 2 || correctAnswer === undefined) {
+      return res.status(400).json({ message: 'question, options (min 2), correctAnswer required' });
+    }
+    const course = await req.db.courses.findOne({ _id: req.params.courseId });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const chIdx = parseInt(req.params.chapterIndex);
+    if (!course.chapters || !course.chapters[chIdx]) return res.status(404).json({ message: 'Chapter not found' });
+    if (!course.chapters[chIdx].mcqs) course.chapters[chIdx].mcqs = [];
+    course.chapters[chIdx].mcqs.push({ question, options, correctAnswer });
+    await req.db.courses.remove({ _id: course._id }, {});
+    await req.db.courses.insert(course);
+    invalidateByPattern('/api/courses');
+    res.status(201).json({ message: 'MCQ added', mcqs: course.chapters[chIdx].mcqs });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Update MCQ
+router.put('/quiz/:courseId/chapter/:chapterIndex/:mcqIndex', async (req, res) => {
+  try {
+    const course = await req.db.courses.findOne({ _id: req.params.courseId });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const chIdx = parseInt(req.params.chapterIndex);
+    const mcqIdx = parseInt(req.params.mcqIndex);
+    if (!course.chapters?.[chIdx]?.mcqs?.[mcqIdx]) return res.status(404).json({ message: 'MCQ not found' });
+    const { question, options, correctAnswer } = req.body;
+    if (question !== undefined) course.chapters[chIdx].mcqs[mcqIdx].question = question;
+    if (options !== undefined) course.chapters[chIdx].mcqs[mcqIdx].options = options;
+    if (correctAnswer !== undefined) course.chapters[chIdx].mcqs[mcqIdx].correctAnswer = correctAnswer;
+    await req.db.courses.remove({ _id: course._id }, {});
+    await req.db.courses.insert(course);
+    invalidateByPattern('/api/courses');
+    res.json({ message: 'MCQ updated', mcq: course.chapters[chIdx].mcqs[mcqIdx] });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Delete MCQ
+router.delete('/quiz/:courseId/chapter/:chapterIndex/:mcqIndex', async (req, res) => {
+  try {
+    const course = await req.db.courses.findOne({ _id: req.params.courseId });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const chIdx = parseInt(req.params.chapterIndex);
+    const mcqIdx = parseInt(req.params.mcqIndex);
+    if (!course.chapters?.[chIdx]?.mcqs?.[mcqIdx]) return res.status(404).json({ message: 'MCQ not found' });
+    course.chapters[chIdx].mcqs.splice(mcqIdx, 1);
+    await req.db.courses.remove({ _id: course._id }, {});
+    await req.db.courses.insert(course);
+    invalidateByPattern('/api/courses');
+    res.json({ message: 'MCQ deleted' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Bulk import MCQs from CSV text
+router.post('/quiz/:courseId/chapter/:chapterIndex/import', async (req, res) => {
+  try {
+    const { csv } = req.body;
+    if (!csv) return res.status(400).json({ message: 'csv text required' });
+    const course = await req.db.courses.findOne({ _id: req.params.courseId });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const chIdx = parseInt(req.params.chapterIndex);
+    if (!course.chapters?.[chIdx]) return res.status(404).json({ message: 'Chapter not found' });
+    if (!course.chapters[chIdx].mcqs) course.chapters[chIdx].mcqs = [];
+
+    const lines = csv.trim().split('\n');
+    let imported = 0;
+    let skipped = 0;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.toLowerCase().startsWith('question,')) continue;
+      const parts = trimmed.split(',').map(s => s.trim());
+      if (parts.length < 6) { skipped++; continue; }
+      const [question, o1, o2, o3, o4, correct] = parts;
+      const correctIdx = ['a', 'b', 'c', 'd', '1', '2', '3', '4'].indexOf(correct.toLowerCase());
+      if (correctIdx === -1 || !question) { skipped++; continue; }
+      const correctAnswer = correctIdx >= 4 ? correctIdx - 4 : correctIdx;
+      course.chapters[chIdx].mcqs.push({
+        question,
+        options: [o1, o2, o3, o4],
+        correctAnswer,
+      });
+      imported++;
+    }
+
+    await req.db.courses.remove({ _id: course._id }, {});
+    await req.db.courses.insert(course);
+    invalidateByPattern('/api/courses');
+    res.json({ message: `Imported ${imported} MCQs, skipped ${skipped}`, imported, skipped });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 module.exports = router;

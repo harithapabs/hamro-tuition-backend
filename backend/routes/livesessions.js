@@ -63,6 +63,8 @@ router.post('/enroll', auth, upload.single('screenshot'), async (req, res) => {
     const existing = await req.db.enrollments.findOne({ liveSessionId, userId: req.userId });
     if (existing) return res.status(400).json({ message: 'Already enrolled' });
     const screenshotPath = req.file ? `/uploads/enrollments/${req.file.filename}` : '';
+    const session = await req.db.liveSessions.findOne({ _id: liveSessionId });
+    const isFree = !session || !session.price || Number(session.price) === 0;
     const enrollment = await req.db.enrollments.insert({
       liveSessionId,
       userId: req.userId,
@@ -70,7 +72,7 @@ router.post('/enroll', auth, upload.single('screenshot'), async (req, res) => {
       userEmail: req.user.email,
       screenshot: screenshotPath,
       courseDetail: courseDetail || '',
-      status: 'pending',
+      status: isFree ? 'approved' : 'pending',
       createdAt: new Date().toISOString()
     });
     res.status(201).json(enrollment);
