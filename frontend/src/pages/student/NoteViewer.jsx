@@ -113,7 +113,7 @@ const NoteViewer = () => {
           src={`${BASE_URL}${selectedNote.url}`}
           className="flex-1 w-full border-0"
           title={selectedNote.title}
-          sandbox="allow-scripts allow-same-origin"
+          allow="fullscreen"
         />
       )}
     </div>

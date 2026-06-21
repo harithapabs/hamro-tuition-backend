@@ -53,8 +53,10 @@ app.use(helmet({
       'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdnjs.cloudflare.com'],
       'font-src': ["'self'", 'https://fonts.gstatic.com', 'https://cdnjs.cloudflare.com', 'data:'],
       'connect-src': ["'self'", 'http://localhost:3000', 'http://localhost:5000', 'https:'],
+      'frame-src': ["'self'", 'https:'],
     }
   },
+  frameguard: false,
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
