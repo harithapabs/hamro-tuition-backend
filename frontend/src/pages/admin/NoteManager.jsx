@@ -21,7 +21,12 @@ const NoteManager = () => {
   const [replaceIdx, setReplaceIdx] = useState(-1);
 
   useEffect(() => {
-    adminAPI.getQuizCourses().then(({ data }) => setCourses(data)).catch(() => {});
+    adminAPI.getQuizCourses()
+      .then(({ data }) => setCourses(data))
+      .catch((err) => {
+        console.error('Failed to load courses:', err);
+        toast.error('Failed to load courses. Try refreshing.');
+      });
   }, []);
 
   const selectedCourseData = courses.find(c => c._id === selectedCourse);
