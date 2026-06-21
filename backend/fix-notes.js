@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const schema = new mongoose.Schema({}, { strict: false, versionKey: false, _id: false });
+const schema = new mongoose.Schema({}, { strict: false, versionKey: false });
 const Course = mongoose.model('courses', schema, 'courses');
 
 async function main() {
@@ -8,34 +8,48 @@ async function main() {
     serverSelectionTimeoutMS: 10000,
   });
   
-  // Use raw collection directly
   const raw = Course.collection;
-  
   const course = await raw.findOne({ title: { $regex: 'Class 12 Mathematics' } });
-  if (!course) { console.log('Not found'); await mongoose.disconnect(); return; }
   
   console.log('ID:', course._id);
-  console.log('Type:', typeof course._id);
-  console.log('Chapters:', course.chapters?.length);
   
   for (let i = 0; i < (course.chapters || []).length; i++) {
-    if (course.chapters[i].notes?.length > 0) {
-      console.log(`Chapter ${i}: ${course.chapters[i].notes.length} notes`);
+    const ch = course.chapters[i];
+    if (ch.notes && ch.notes.length > 0) {
+      console.log(`Chapter ${i}: ${ch.notes.length} notes`);
+      for (const n of ch.notes) {
+        console.log(`  - ${n.title} | has url: ${!!n.url} | has content: ${!!n.content}`);
+      }
     }
   }
   
-  // Clear notes
-  const chapters = course.chapters.map(ch => ({ ...ch, notes: [] }));
-  const result = await raw.updateOne({ _id: course._id }, { $set: { chapters } });
-  console.log('Update:', JSON.stringify(result));
+  // Clear ALL notes with old url-only format
+  const chapters = course.chapters.map(ch => ({
+    ...ch,
+    notes: (ch.notes || []).filter(n => n.content).map(n => ({
+      _id: n._id,
+      title: n.title,
+      content: n.content,
+      createdAt: n.createdAt,
+    }))
+  }));
   
-  // Verify
-  const verify = await raw.findOne({ _id: course._id });
-  let totalNotes = 0;
-  for (const ch of verify.chapters || []) {
-    totalNotes += (ch.notes?.length || 0);
+  let removed = 0;
+  for (let i = 0; i < course.chapters.length; i++) {
+    const before = course.chapters[i].notes?.length || 0;
+    const after = chapters[i].notes?.length || 0;
+    if (before > after) {
+      console.log(`Chapter ${i}: ${before} -> ${after} (removed ${before - after} old notes)`);
+      removed += before - after;
+    }
   }
-  console.log('Remaining notes:', totalNotes);
+  
+  if (removed > 0) {
+    const result = await raw.updateOne({ _id: course._id }, { $set: { chapters } });
+    console.log(`Cleaned ${removed} old notes. Result:`, JSON.stringify(result));
+  } else {
+    console.log('No old notes to clean');
+  }
   
   await mongoose.disconnect();
 }

@@ -109,9 +109,8 @@ const NoteViewer = () => {
       {selectedNote && selectedNote.content && (
         <iframe
           srcDoc={selectedNote.content}
-          className="flex-1 w-full border-0"
+          className="flex-1 w-full border-0 bg-white"
           title={selectedNote.title}
-          sandbox="allow-scripts allow-same-origin allow-forms"
         />
       )}
     </div>
