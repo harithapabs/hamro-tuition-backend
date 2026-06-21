@@ -106,12 +106,12 @@ const NoteViewer = () => {
       </div>
 
       {/* Full-screen iframe */}
-      {selectedNote && (
+      {selectedNote && selectedNote.content && (
         <iframe
-          src={selectedNote.url}
+          srcDoc={selectedNote.content}
           className="flex-1 w-full border-0"
           title={selectedNote.title}
-          allow="fullscreen"
+          sandbox="allow-scripts allow-same-origin allow-forms"
         />
       )}
     </div>

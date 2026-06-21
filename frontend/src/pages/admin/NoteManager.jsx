@@ -182,14 +182,16 @@ const NoteManager = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{note.title}</p>
-                      <p className="text-xs text-gray-400 truncate">{note.url}</p>
+                      <p className="text-xs text-gray-400">{note.content ? 'HTML content stored' : note.url || 'No content'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <a href={note.url} target="_blank" rel="noopener noreferrer"
+                    {note.content && (
+                      <a href={`data:text/html;charset=utf-8,${encodeURIComponent(note.content)}`} target="_blank" rel="noopener noreferrer"
                       className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-all" title="Preview">
                       <FiExternalLink size={16} />
                     </a>
+                    )}
                     <div className="relative">
                       <button onClick={() => setReplaceIdx(replaceIdx === note._id ? -1 : note._id)}
                         className="p-2 text-gray-400 hover:text-orange-600 rounded-lg hover:bg-orange-50 transition-all" title="Replace">

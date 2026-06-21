@@ -618,7 +618,6 @@ router.post('/quiz/:courseId/chapter/:chapterIndex/import', async (req, res) => 
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const { uploadFile, deleteFile } = require('../utils/storage');
 
 const notesDir = path.join(__dirname, '..', 'uploads', 'notes');
 if (!fs.existsSync(notesDir)) fs.mkdirSync(notesDir, { recursive: true });
@@ -641,7 +640,7 @@ const noteUpload = multer({
   }
 });
 
-// Upload note for a chapter
+// Upload note for a chapter (stores HTML content in MongoDB)
 router.post('/notes/:courseId/:chapterIndex', noteUpload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'File required' });
@@ -650,21 +649,22 @@ router.post('/notes/:courseId/:chapterIndex', noteUpload.single('file'), async (
     const chIdx = parseInt(req.params.chapterIndex);
     if (!course.chapters?.[chIdx]) return res.status(404).json({ message: 'Chapter not found' });
 
-    const destPath = `hamro-notes/${req.params.courseId}_ch${chIdx}_${Date.now()}`;
-    const noteUrl = await uploadFile(req.file.path, destPath, 'text/html');
+    const htmlContent = fs.readFileSync(req.file.path, 'utf-8');
+    fs.unlinkSync(req.file.path);
 
     if (!course.chapters[chIdx].notes) course.chapters[chIdx].notes = [];
-    course.chapters[chIdx].notes.push({
+    const note = {
       _id: `note_${Date.now()}`,
       title: req.body.title || req.file.originalname,
-      url: noteUrl,
+      content: htmlContent,
       createdAt: new Date().toISOString()
-    });
+    };
+    course.chapters[chIdx].notes.push(note);
 
     await req.db.courses.remove({ _id: course._id }, {});
     await req.db.courses.insert(course);
     invalidateByPattern('/api/courses');
-    res.status(201).json({ message: 'Note uploaded', url: noteUrl, notes: course.chapters[chIdx].notes });
+    res.status(201).json({ message: 'Note uploaded', notes: course.chapters[chIdx].notes });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
@@ -689,17 +689,6 @@ router.delete('/notes/:courseId/:chapterIndex/:noteId', async (req, res) => {
     const noteIdx = notes.findIndex(n => n._id === req.params.noteId);
     if (noteIdx === -1) return res.status(404).json({ message: 'Note not found' });
 
-    const note = notes[noteIdx];
-    if (note.url && note.url.includes('cloudinary.com')) {
-      try {
-        const parts = note.url.split('/');
-        const folder = parts[parts.length - 2];
-        const fileWithExt = parts[parts.length - 1];
-        const publicId = `${folder}/${fileWithExt.split('.')[0]}`;
-        await deleteFile(publicId);
-      } catch {}
-    }
-
     notes.splice(noteIdx, 1);
     await req.db.courses.remove({ _id: course._id }, {});
     await req.db.courses.insert(course);
@@ -719,22 +708,13 @@ router.put('/notes/:courseId/:chapterIndex/:noteId', noteUpload.single('file'), 
     const noteIdx = notes.findIndex(n => n._id === req.params.noteId);
     if (noteIdx === -1) return res.status(404).json({ message: 'Note not found' });
 
-    const oldNote = notes[noteIdx];
-    if (oldNote.url && oldNote.url.includes('cloudinary.com')) {
-      const parts = oldNote.url.split('/');
-      const folder = parts[parts.length - 2];
-      const fileWithExt = parts[parts.length - 1];
-      const publicId = `${folder}/${fileWithExt.split('.')[0]}`;
-      await deleteFile(publicId);
-    }
-
-    const destPath = `hamro-notes/${req.params.courseId}_ch${chIdx}_${Date.now()}`;
-    const newUrl = await uploadFile(req.file.path, destPath, 'text/html');
+    const htmlContent = fs.readFileSync(req.file.path, 'utf-8');
+    fs.unlinkSync(req.file.path);
 
     notes[noteIdx] = {
       ...notes[noteIdx],
       title: req.body.title || notes[noteIdx].title,
-      url: newUrl,
+      content: htmlContent,
       updatedAt: new Date().toISOString()
     };
 
