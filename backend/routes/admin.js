@@ -691,11 +691,13 @@ router.delete('/notes/:courseId/:chapterIndex/:noteId', async (req, res) => {
 
     const note = notes[noteIdx];
     if (note.url && note.url.includes('cloudinary.com')) {
-      const parts = note.url.split('/');
-      const folder = parts[parts.length - 2];
-      const fileWithExt = parts[parts.length - 1];
-      const publicId = `${folder}/${fileWithExt.split('.')[0]}`;
-      await deleteFile(publicId);
+      try {
+        const parts = note.url.split('/');
+        const folder = parts[parts.length - 2];
+        const fileWithExt = parts[parts.length - 1];
+        const publicId = `${folder}/${fileWithExt.split('.')[0]}`;
+        await deleteFile(publicId);
+      } catch {}
     }
 
     notes.splice(noteIdx, 1);
