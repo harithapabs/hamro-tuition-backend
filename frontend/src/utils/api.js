@@ -121,6 +121,10 @@ export const adminAPI = {
   updateMCQ: (courseId, chIdx, mcqIdx, data) => API.put(`/admin/quiz/${courseId}/chapter/${chIdx}/${mcqIdx}`, data),
   deleteMCQ: (courseId, chIdx, mcqIdx) => API.delete(`/admin/quiz/${courseId}/chapter/${chIdx}/${mcqIdx}`),
   importMCQs: (courseId, chIdx, csv) => API.post(`/admin/quiz/${courseId}/chapter/${chIdx}/import`, { csv }),
+  getChapterNotes: (courseId, chIdx) => API.get(`/admin/notes/${courseId}/${chIdx}`),
+  uploadNote: (courseId, chIdx, formData) => API.post(`/admin/notes/${courseId}/${chIdx}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteNote: (courseId, chIdx, noteId) => API.delete(`/admin/notes/${courseId}/${chIdx}/${noteId}`),
+  replaceNote: (courseId, chIdx, noteId, formData) => API.put(`/admin/notes/${courseId}/${chIdx}/${noteId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
 export const studentAPI = {

@@ -23,6 +23,7 @@ const navItems = [
   { path: '/dashboard/admin/reviews', label: 'Reviews', icon: FiStar },
   { path: '/dashboard/admin/audit-logs', label: 'Audit Logs', icon: FiActivity },
   { path: '/dashboard/admin/quiz-manager', label: 'Quiz Manager', icon: FiHelpCircle },
+  { path: '/dashboard/admin/note-manager', label: 'Note Manager', icon: FiFileText },
 ];
 
 const AdminDashboard = () => {

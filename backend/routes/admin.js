@@ -614,4 +614,117 @@ router.post('/quiz/:courseId/chapter/:chapterIndex/import', async (req, res) => 
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// ========== NOTE MANAGEMENT ==========
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+
+const notesDir = path.join(__dirname, '..', 'uploads', 'notes');
+if (!fs.existsSync(notesDir)) fs.mkdirSync(notesDir, { recursive: true });
+
+const noteStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, notesDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const name = `${req.params.courseId}_ch${req.params.chapterIndex}_${Date.now()}${ext}`;
+    cb(null, name);
+  }
+});
+const noteUpload = multer({
+  storage: noteStorage,
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (['.htm', '.html'].includes(ext)) return cb(null, true);
+    cb(new Error('Only .htm and .html files allowed'));
+  }
+});
+
+// Upload note for a chapter
+router.post('/notes/:courseId/:chapterIndex', noteUpload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'File required' });
+    const course = await req.db.courses.findOne({ _id: req.params.courseId });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const chIdx = parseInt(req.params.chapterIndex);
+    if (!course.chapters?.[chIdx]) return res.status(404).json({ message: 'Chapter not found' });
+
+    const noteUrl = `/uploads/notes/${req.file.filename}`;
+    if (!course.chapters[chIdx].notes) course.chapters[chIdx].notes = [];
+    course.chapters[chIdx].notes.push({
+      _id: `note_${Date.now()}`,
+      title: req.body.title || req.file.originalname,
+      url: noteUrl,
+      createdAt: new Date().toISOString()
+    });
+
+    await req.db.courses.remove({ _id: course._id }, {});
+    await req.db.courses.insert(course);
+    invalidateByPattern('/api/courses');
+    res.status(201).json({ message: 'Note uploaded', url: noteUrl, notes: course.chapters[chIdx].notes });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Get notes for a chapter
+router.get('/notes/:courseId/:chapterIndex', async (req, res) => {
+  try {
+    const course = await req.db.courses.findOne({ _id: req.params.courseId });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const chIdx = parseInt(req.params.chapterIndex);
+    const notes = course.chapters?.[chIdx]?.notes || [];
+    res.json(notes);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Delete a note
+router.delete('/notes/:courseId/:chapterIndex/:noteId', async (req, res) => {
+  try {
+    const course = await req.db.courses.findOne({ _id: req.params.courseId });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const chIdx = parseInt(req.params.chapterIndex);
+    const notes = course.chapters?.[chIdx]?.notes || [];
+    const noteIdx = notes.findIndex(n => n._id === req.params.noteId);
+    if (noteIdx === -1) return res.status(404).json({ message: 'Note not found' });
+
+    const note = notes[noteIdx];
+    const filePath = path.join(__dirname, '..', note.url);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+    notes.splice(noteIdx, 1);
+    await req.db.courses.remove({ _id: course._id }, {});
+    await req.db.courses.insert(course);
+    invalidateByPattern('/api/courses');
+    res.json({ message: 'Note deleted' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Replace a note (re-upload)
+router.put('/notes/:courseId/:chapterIndex/:noteId', noteUpload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'File required' });
+    const course = await req.db.courses.findOne({ _id: req.params.courseId });
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const chIdx = parseInt(req.params.chapterIndex);
+    const notes = course.chapters?.[chIdx]?.notes || [];
+    const noteIdx = notes.findIndex(n => n._id === req.params.noteId);
+    if (noteIdx === -1) return res.status(404).json({ message: 'Note not found' });
+
+    const oldNote = notes[noteIdx];
+    const oldPath = path.join(__dirname, '..', oldNote.url);
+    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+
+    notes[noteIdx] = {
+      ...notes[noteIdx],
+      title: req.body.title || notes[noteIdx].title,
+      url: `/uploads/notes/${req.file.filename}`,
+      updatedAt: new Date().toISOString()
+    };
+
+    await req.db.courses.remove({ _id: course._id }, {});
+    await req.db.courses.insert(course);
+    invalidateByPattern('/api/courses');
+    res.json({ message: 'Note updated', notes: course.chapters[chIdx].notes });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 module.exports = router;
