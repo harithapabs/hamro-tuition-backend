@@ -31,6 +31,7 @@ const Reports = lazy(() => import('./pages/admin/Reports'));
 const AuditLogs = lazy(() => import('./pages/admin/AuditLogs'));
 const QuizManager = lazy(() => import('./pages/admin/QuizManager'));
 const NoteManager = lazy(() => import('./pages/admin/NoteManager'));
+const NoteViewer = lazy(() => import('./pages/student/NoteViewer'));
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
 const MyCourses = lazy(() => import('./pages/student/MyCourses'));
 const WatchVideo = lazy(() => import('./pages/student/WatchVideo'));
@@ -114,6 +115,7 @@ const AppContent = () => {
             <Route index element={<MyCourses />} />
             <Route path="courses" element={<MyCourses />} />
             <Route path="course/:courseId/lesson/:lessonId" element={<WatchVideo />} />
+            <Route path="course/:courseId/notes/:chapterIndex" element={<NoteViewer />} />
             <Route path="quiz" element={<Quiz />} />
             <Route path="quiz/:lessonId" element={<Quiz />} />
             <Route path="assignments" element={<Assignments />} />

@@ -45,6 +45,7 @@ function normalizeChapters(course) {
       ...ch,
       pdfUrl: ch.pdfUrl || '',
       mcqs: ch.mcqs || [],
+      notes: ch.notes || [],
       videos: (ch.videos || []).map((v, vIdx) => ({ ...v, _id: v._id || v.id || `c${chIdx}v${vIdx}` })),
     }));
   }
@@ -608,6 +609,7 @@ const WatchVideo = () => {
                           <p className="text-xs text-gray-400">
                             {ch.videos.length} video(s)
                             {ch.pdfUrl ? ' | PDF' : ''}
+                            {(ch.notes?.length || 0) > 0 ? ` | ${ch.notes.length} Note` : ''}
                             {(ch.mcqs?.length || 0) > 0 ? ` | ${ch.mcqs.length} MCQ` : ''}
                           </p>
                         </div>
@@ -629,6 +631,14 @@ const WatchVideo = () => {
                                 className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors">
                                 <FiDownload size={14} /> Download PDF Notes
                               </a>
+                            )}
+
+                            {/* HTML Notes Link */}
+                            {(ch.notes?.length || 0) > 0 && (
+                              <Link to={`/dashboard/student/course/${courseId}/notes/${chIdx}`}
+                                className="flex items-center gap-2 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition-colors">
+                                <FiFileText size={14} /> View Notes ({ch.notes.length})
+                              </Link>
                             )}
 
                             {/* Videos */}
