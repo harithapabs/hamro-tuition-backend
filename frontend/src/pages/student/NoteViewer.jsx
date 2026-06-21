@@ -29,8 +29,6 @@ const NoteViewer = () => {
     fetchNotes();
   }, [courseId, chapterIndex]);
 
-  const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
-
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
@@ -110,7 +108,7 @@ const NoteViewer = () => {
       {/* Full-screen iframe */}
       {selectedNote && (
         <iframe
-          src={`${BASE_URL}${selectedNote.url}`}
+          src={selectedNote.url}
           className="flex-1 w-full border-0"
           title={selectedNote.title}
           allow="fullscreen"

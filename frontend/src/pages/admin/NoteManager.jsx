@@ -81,8 +81,6 @@ const NoteManager = () => {
     } catch { toast.error('Failed'); }
   };
 
-  const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
-
   return (
     <div>
       <div className="mb-6">
@@ -183,7 +181,7 @@ const NoteManager = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <a href={`${BASE_URL}${note.url}`} target="_blank" rel="noopener noreferrer"
+                    <a href={note.url} target="_blank" rel="noopener noreferrer"
                       className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-all" title="Preview">
                       <FiExternalLink size={16} />
                     </a>

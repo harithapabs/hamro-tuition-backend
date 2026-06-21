@@ -618,6 +618,7 @@ router.post('/quiz/:courseId/chapter/:chapterIndex/import', async (req, res) => 
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const { uploadFile, deleteFile } = require('../utils/storage');
 
 const notesDir = path.join(__dirname, '..', 'uploads', 'notes');
 if (!fs.existsSync(notesDir)) fs.mkdirSync(notesDir, { recursive: true });
@@ -649,7 +650,9 @@ router.post('/notes/:courseId/:chapterIndex', noteUpload.single('file'), async (
     const chIdx = parseInt(req.params.chapterIndex);
     if (!course.chapters?.[chIdx]) return res.status(404).json({ message: 'Chapter not found' });
 
-    const noteUrl = `/uploads/notes/${req.file.filename}`;
+    const destPath = `hamro-notes/${req.params.courseId}_ch${chIdx}_${Date.now()}`;
+    const noteUrl = await uploadFile(req.file.path, destPath, 'text/html');
+
     if (!course.chapters[chIdx].notes) course.chapters[chIdx].notes = [];
     course.chapters[chIdx].notes.push({
       _id: `note_${Date.now()}`,
@@ -687,8 +690,13 @@ router.delete('/notes/:courseId/:chapterIndex/:noteId', async (req, res) => {
     if (noteIdx === -1) return res.status(404).json({ message: 'Note not found' });
 
     const note = notes[noteIdx];
-    const filePath = path.join(__dirname, '..', note.url);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    if (note.url && note.url.includes('cloudinary.com')) {
+      const parts = note.url.split('/');
+      const folder = parts[parts.length - 2];
+      const fileWithExt = parts[parts.length - 1];
+      const publicId = `${folder}/${fileWithExt.split('.')[0]}`;
+      await deleteFile(publicId);
+    }
 
     notes.splice(noteIdx, 1);
     await req.db.courses.remove({ _id: course._id }, {});
@@ -710,13 +718,21 @@ router.put('/notes/:courseId/:chapterIndex/:noteId', noteUpload.single('file'), 
     if (noteIdx === -1) return res.status(404).json({ message: 'Note not found' });
 
     const oldNote = notes[noteIdx];
-    const oldPath = path.join(__dirname, '..', oldNote.url);
-    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    if (oldNote.url && oldNote.url.includes('cloudinary.com')) {
+      const parts = oldNote.url.split('/');
+      const folder = parts[parts.length - 2];
+      const fileWithExt = parts[parts.length - 1];
+      const publicId = `${folder}/${fileWithExt.split('.')[0]}`;
+      await deleteFile(publicId);
+    }
+
+    const destPath = `hamro-notes/${req.params.courseId}_ch${chIdx}_${Date.now()}`;
+    const newUrl = await uploadFile(req.file.path, destPath, 'text/html');
 
     notes[noteIdx] = {
       ...notes[noteIdx],
       title: req.body.title || notes[noteIdx].title,
-      url: `/uploads/notes/${req.file.filename}`,
+      url: newUrl,
       updatedAt: new Date().toISOString()
     };
 
